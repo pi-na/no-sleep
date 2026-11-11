@@ -8,6 +8,10 @@ struct MenuContentView: View {
     @Bindable var controller: SleepController
     let integrations: Integrations
     let openSettings: () -> Void
+    /// App-level actions are passed in: under SwiftUI's `@NSApplicationDelegateAdaptor`,
+    /// `NSApp.delegate` is SwiftUI's own object, not our `AppDelegate`.
+    var goDark: () -> Void = {}
+    var quit: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -40,15 +44,11 @@ struct MenuContentView: View {
 
             MenuDivider()
             VStack(spacing: 0) {
-                MenuActionRow(title: "Go Dark", subtitle: "Screen off · sound muted", shortcut: "⌘D") {
-                    (NSApp.delegate as? AppDelegate)?.goDark()
-                }
+                MenuActionRow(title: "Go Dark", subtitle: "Screen off · sound muted", shortcut: "⌘D", action: goDark)
                 .keyboardShortcut("d", modifiers: .command)
                 MenuActionRow(title: "Settings…", shortcut: "⌘,", action: openSettings)
                     .keyboardShortcut(",", modifiers: .command)
-                MenuActionRow(title: "Quit No Sleep", shortcut: "⌘Q") {
-                    (NSApp.delegate as? AppDelegate)?.quitFromMenu()
-                }
+                MenuActionRow(title: "Quit No Sleep", shortcut: "⌘Q", action: quit)
                 .keyboardShortcut("q", modifiers: .command)
             }
             .padding(5)

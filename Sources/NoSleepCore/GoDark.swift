@@ -2,13 +2,23 @@ import CoreAudio
 import Foundation
 
 /// "Go Dark": mute the sound and turn the screen off right now (any key or mouse move wakes the screen).
-enum GoDark {
-    static func run() {
+public enum GoDark {
+    public static func run() {
         if !muteDefaultOutput() {
             // Some devices don't expose a mute control; let AppleScript find another way.
-            LidSleepControl.run("/usr/bin/osascript", ["-e", "set volume with output muted"])
+            run("/usr/bin/osascript", ["-e", "set volume with output muted"])
         }
-        LidSleepControl.run(LidSleepControl.pmsetPath, ["displaysleepnow"])
+        run("/usr/bin/pmset", ["displaysleepnow"])
+    }
+
+    private static func run(_ path: String, _ arguments: [String]) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try? process.run()
+        process.waitUntilExit()
     }
 
     /// Mutes the current default output device through CoreAudio.

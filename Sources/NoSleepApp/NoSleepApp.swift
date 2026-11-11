@@ -11,7 +11,9 @@ struct NoSleepApp: App {
             MenuContentView(
                 controller: appDelegate.controller,
                 integrations: appDelegate.integrations,
-                openSettings: { appDelegate.openSettings() }
+                openSettings: { appDelegate.openSettings() },
+                goDark: { appDelegate.goDark() },
+                quit: { appDelegate.quitFromMenu() }
             )
         } label: {
             MenuBarLabel(controller: appDelegate.controller)
@@ -67,7 +69,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Mute and turn the screen off. Closes the menu first so the click doesn't wake the display.
     func goDark() {
         if let panel = NSApp.keyWindow, panel is NSPanel { panel.close() }
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.4) {
+        // Give the click time to finish so it doesn't immediately wake the display again.
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.6) {
             GoDark.run()
         }
     }

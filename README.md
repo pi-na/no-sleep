@@ -79,6 +79,7 @@ nosleep run -- make release      # stay awake while this runs
 nosleep for 1h30m                # stay awake for a bit
 nosleep acquire backup --pid 42  # stay awake until a process exits
 nosleep list                     # who's keeping the Mac up?
+nosleep dark                     # Go Dark: screen off + mute
 ```
 
 You can install it into `~/.local/bin` from Settings.
