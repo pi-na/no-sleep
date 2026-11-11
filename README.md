@@ -28,17 +28,17 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 
 ## Installation - Releases
 
-1. Grab the latest `.dmg` from **[Releases →](https://github.com/pi-na/no-sleep/releases/latest)** (Apple Silicon, macOS 27).
+1. Grab the latest `.dmg` for your macOS from **[Releases →](https://github.com/pi-na/no-sleep/releases/latest)**: `…-macos26-…` for Tahoe, `…-macos27-…` for macOS 27 (both Apple Silicon).
 2. Open it and drag **No Sleep** into **Applications**.
-3. It's not notarized (yet), so the first launch needs one of these:
+3. It isn't notarized by Apple yet, so macOS won't open it on the first try. Run this once:
    ```sh
    xattr -dr com.apple.quarantine /Applications/NoSleep.app
    ```
-   …or open it once and hit **Open Anyway** in System Settings → Privacy & Security.
+   …or try to open it once, then hit **Open Anyway** in System Settings → Privacy & Security.
 
 The first time you enable it, macOS asks for your password **once** so lid-closed mode works. That adds a sudoers rule that only allows `pmset -a disablesleep 0/1`, nothing else. You can revoke it any time from Settings.
 
-On macOS 14–26 or an Intel Mac? [Build it from source](#build-from-source), it takes about a minute.
+On macOS 14–15 or an Intel Mac? [Build it from source](#build-from-source), it takes about a minute.
 
 ## Setup your agents
 
@@ -94,7 +94,9 @@ scripts/build-app.sh --install        # universal build → /Applications
 scripts/package-dmg.sh 27.0 macos27   # Apple Silicon DMG for a given minimum macOS
 ```
 
-Builds get signed with a local self-signed identity (`scripts/signing-identity.sh` creates it once, in its own keychain). That keeps the signature stable between builds, so macOS doesn't treat every update as a brand-new app and **Open at login** stays on.
+Got an Apple Developer account? Set `DEVELOPER_ID="Developer ID Application: You (TEAMID)"` and `NOTARY_PROFILE=<notarytool profile>`, and `package-dmg.sh` signs, notarizes and staples the DMG for you.
+
+Otherwise, builds get signed with a local self-signed identity (`scripts/signing-identity.sh` creates it once, in its own keychain). That keeps the signature stable between builds, so macOS doesn't treat every update as a brand-new app and **Open at login** stays on.
 
 ## License
 

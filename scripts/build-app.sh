@@ -43,17 +43,26 @@ ICONSET=$(mktemp -d)/AppIcon.iconset
 swift scripts/make-icon.swift "$ICONSET" 2>/dev/null
 iconutil -c icns "$ICONSET" -o "$CONTENTS/Resources/AppIcon.icns"
 
-# Stable local identity (see scripts/signing-identity.sh) so macOS keeps recognising the app
-# across updates (Login Items!). Falls back to ad-hoc if it can't be set up.
-if SIGNING=$(scripts/signing-identity.sh 2>/dev/null); then
+# Signing, best first:
+#  1. DEVELOPER_ID="Developer ID Application: Name (TEAMID)": distributable, required for notarization.
+#  2. Stable local self-signed identity (scripts/signing-identity.sh) so macOS keeps recognising the
+#     app across updates (Login Items!).
+#  3. Ad-hoc.
+EXTRA=()
+if [ -n "${DEVELOPER_ID:-}" ]; then
+  IDENTITY=$DEVELOPER_ID
+  EXTRA=(--timestamp)
+  echo "▸ Signing ($DEVELOPER_ID)"
+elif SIGNING=$(scripts/signing-identity.sh 2>/dev/null); then
   IDENTITY=$(echo "$SIGNING" | head -1)
   echo "▸ Signing (NoSleep Local Signing)"
 else
   IDENTITY=-
   echo "▸ Signing (ad-hoc)"
 fi
-codesign --force --sign "$IDENTITY" --options runtime --identifier com.tomaspinausig.nosleep.cli "$CONTENTS/Helpers/nosleep"
-codesign --force --sign "$IDENTITY" --options runtime "$APP"
+codesign --force --sign "$IDENTITY" --options runtime "${EXTRA[@]+"${EXTRA[@]}"}" \
+  --identifier com.tomaspinausig.nosleep.cli "$CONTENTS/Helpers/nosleep"
+codesign --force --sign "$IDENTITY" --options runtime "${EXTRA[@]+"${EXTRA[@]}"}" "$APP"
 codesign --verify --strict "$APP"
 
 echo "✓ $APP ($(lipo -archs "$CONTENTS/MacOS/NoSleep"), macOS $MIN_MACOS+)"
