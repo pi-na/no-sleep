@@ -12,6 +12,7 @@ struct MenuContentView: View {
     /// `NSApp.delegate` is SwiftUI's own object, not our `AppDelegate`.
     var goDark: () -> Void = {}
     var quit: () -> Void = {}
+    var updater: Updater?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -44,6 +45,9 @@ struct MenuContentView: View {
 
             MenuDivider()
             VStack(spacing: 0) {
+                if let updater, case .available(let version) = updater.state, !updater.automaticallyInstalls {
+                    MenuActionRow(title: "Update to \(version)", subtitle: "restarts No Sleep", action: updater.installNow)
+                }
                 MenuActionRow(title: "Go Dark", subtitle: "Screen off · sound muted", shortcut: "⌘D", action: goDark)
                 .keyboardShortcut("d", modifiers: .command)
                 MenuActionRow(title: "Settings…", shortcut: "⌘,", action: openSettings)

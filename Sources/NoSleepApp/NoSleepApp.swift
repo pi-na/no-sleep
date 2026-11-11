@@ -13,7 +13,8 @@ struct NoSleepApp: App {
                 integrations: appDelegate.integrations,
                 openSettings: { appDelegate.openSettings() },
                 goDark: { appDelegate.goDark() },
-                quit: { appDelegate.quitFromMenu() }
+                quit: { appDelegate.quitFromMenu() },
+                updater: appDelegate.updater
             )
         } label: {
             MenuBarLabel(controller: appDelegate.controller)
@@ -26,6 +27,8 @@ struct NoSleepApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let controller = SleepController()
     let integrations = Integrations()
+    let updater = Updater()
+    private var relaunchingForUpdate = false
     private let settingsWindow = SettingsWindowController()
     private var quittingFromMenu = false
 
@@ -46,10 +49,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         LoginItem.restoreIfNeeded()
         integrations.refresh()
         controller.start()
+        updater.willRelaunch = { [weak self] in self?.relaunchingForUpdate = true }
+        updater.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        controller.shutdown(forget: quittingFromMenu)
+        controller.shutdown(forget: quittingFromMenu, keepLidState: relaunchingForUpdate)
         try? FileManager.default.removeItem(at: NoSleepPaths.appPIDFile)
     }
 
@@ -63,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Close the menu bar panel first.
         if let panel = NSApp.keyWindow, panel is NSPanel { panel.close() }
         integrations.refresh()
-        settingsWindow.show(controller: controller, integrations: integrations)
+        settingsWindow.show(controller: controller, integrations: integrations, updater: updater)
     }
 
     /// Mute and turn the screen off. Closes the menu first so the click doesn't wake the display.

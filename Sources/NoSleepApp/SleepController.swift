@@ -446,14 +446,16 @@ final class SleepController {
 
     /// Restores normal sleep before the app exits.
     /// - Parameter forget: true when the user explicitly quits (don't resume on next launch).
-    func shutdown(forget: Bool) {
+    /// - Parameter keepLidState: relaunching for an update — leave `disablesleep` as is so a closed
+    ///   MacBook doesn't get a sleep window; the new instance reconciles it on launch.
+    func shutdown(forget: Bool, keepLidState: Bool = false) {
         if forget {
             manualEnabled = false
             timerEnd = nil
         }
         idleAssertion.set(false)
         displayAssertion.set(false)
-        if lidSleepApplied || defaults.bool(forKey: Keys.lidAppliedByUs) {
+        if !keepLidState, lidSleepApplied || defaults.bool(forKey: Keys.lidAppliedByUs) {
             let ok = lidQueue.sync { LidSleepControl.setSleepDisabled(false) }
             if ok {
                 lidSleepApplied = false

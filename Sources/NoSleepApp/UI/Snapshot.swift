@@ -46,7 +46,7 @@ enum Snapshot {
             to: output.appendingPathComponent("menu-\(scenario)-vibrant.png")
         )
         render(
-            SettingsView(controller: controller, integrations: integrations)
+            SettingsView(controller: controller, integrations: integrations, updater: Updater())
                 .frame(height: 1500)
                 .background(Color(nsColor: .windowBackgroundColor)),
             appearance: .aqua,

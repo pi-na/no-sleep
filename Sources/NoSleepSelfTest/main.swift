@@ -233,5 +233,38 @@ test("sustained condition") {
     check(!Lease(id: "c", source: "cli").isAgent, "cli lease is not an agent")
 }
 
+// MARK: Updates
+
+test("versions") {
+    check(AppVersion("1.10.0")! > AppVersion("1.9.3")!, "numeric, not lexical")
+    check(AppVersion("v1.2.0")! == AppVersion("1.2")!, "v prefix + missing zeros")
+    check(AppVersion("1.2.0-beta")! == AppVersion("1.2.0")!, "suffix ignored")
+    check(AppVersion("1.1.4")! < AppVersion("1.2.0")!, "minor bump")
+    check(AppVersion("abc") == nil && AppVersion("") == nil, "garbage")
+}
+
+test("asset picking") {
+    func asset(_ name: String) -> GitHubRelease.Asset {
+        GitHubRelease.Asset(name: name, browserDownloadURL: URL(string: "https://example.com/\(name)")!)
+    }
+    let assets = [
+        asset("NoSleep-1.2.0-macos26-apple-silicon.dmg"),
+        asset("NoSleep-1.2.0-macos27-apple-silicon.dmg"),
+        asset("NoSleep-1.2.0-macos14-sonoma-apple-silicon.dmg"),
+        asset("notes.txt"),
+    ]
+    check(UpdateAssetPicker.pick(assets, macOSMajor: 27, isAppleSilicon: true)?.name.contains("macos27") == true, "27 → 27")
+    check(UpdateAssetPicker.pick(assets, macOSMajor: 26, isAppleSilicon: true)?.name.contains("macos26") == true, "26 → 26")
+    check(UpdateAssetPicker.pick(assets, macOSMajor: 15, isAppleSilicon: true)?.name.contains("macos14") == true, "15 → 14")
+    check(UpdateAssetPicker.pick(Array(assets.prefix(2)), macOSMajor: 14, isAppleSilicon: true) == nil, "nothing for 14")
+    check(UpdateAssetPicker.pick(assets, macOSMajor: 27, isAppleSilicon: false) == nil, "no Intel build")
+    check(UpdateAssetPicker.pick([asset("NoSleep-1.2.0-macos14-universal.dmg")], macOSMajor: 14, isAppleSilicon: false) != nil, "universal ok on Intel")
+
+    let json = #"{"tag_name":"v1.2.0","name":"No Sleep 1.2.0","body":"hi","draft":false,"prerelease":false,"html_url":"https://github.com/pi-na/no-sleep/releases/tag/v1.2.0","assets":[{"name":"NoSleep-1.2.0-macos27-apple-silicon.dmg","browser_download_url":"https://github.com/x.dmg","size":10,"digest":"sha256:ABCD"}]}"#
+    let release = try JSONDecoder().decode(GitHubRelease.self, from: Data(json.utf8))
+    check(release.version == AppVersion("1.2.0"), "release version")
+    check(release.assets.first?.sha256 == "abcd", "digest parsed")
+}
+
 print(failures == 0 ? "All \(checks) checks passed." : "\(failures) of \(checks) checks failed.")
 exit(failures == 0 ? 0 : 1)

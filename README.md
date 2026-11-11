@@ -24,6 +24,7 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 - **Offline failsafe.** Agents keeping your Mac up but the internet's been dead for 15 minutes (configurable)? No point staying awake, so it lets go. If the lid is closed, the Mac goes to sleep right then.
 - **Go Dark.** One click turns the screen off and mutes the sound. Perfect for letting an agent grind overnight.
 - **Low-battery guard.** It also lets your Mac sleep once the battery gets low (10% by default).
+- **Updates itself.** It checks GitHub Releases, grabs the build for your macOS, makes sure it's signed by the same developer, swaps itself and restarts. No server, no nagging.
 - **Plays nice.** Quitting always gives your Mac its normal sleep back.
 
 ## Installation - Releases
@@ -98,7 +99,9 @@ scripts/package-dmg.sh 27.0 macos27   # Apple Silicon DMG for a given minimum ma
 
 Got an Apple Developer account? Set `DEVELOPER_ID="Developer ID Application: You (TEAMID)"` and `NOTARY_PROFILE=<notarytool profile>`, and `package-dmg.sh` signs, notarizes and staples the DMG for you.
 
-Otherwise, builds get signed with a local self-signed identity (`scripts/signing-identity.sh` creates it once, in its own keychain). That keeps the signature stable between builds, so macOS doesn't treat every update as a brand-new app and **Open at login** stays on.
+Otherwise, builds get signed with a local self-signed identity (`scripts/signing-identity.sh` creates it once, in its own keychain). That keeps the signature stable between builds, so macOS doesn't treat every update as a brand-new app and **Open at login** stays on. It also means the auto-updater only accepts builds signed with that same key, so ship releases from the same Mac (or carry the keychain over).
+
+**Shipping an update:** bump `CFBundleShortVersionString` in `Resources/Info.plist`, then `scripts/package-dmg.sh 26.0 macos26 && scripts/package-dmg.sh 27.0 macos27`, then `gh release create vX.Y.Z build/*-macos2*.dmg --latest`. Installed copies pick it up within a few hours. Keep the `NoSleep-<version>-macos<NN>-apple-silicon.dmg` naming, because that's how the updater finds the right file.
 
 ## License
 

@@ -6,6 +6,7 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var controller: SleepController
     let integrations: Integrations
+    let updater: Updater
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var loginError: String?
 
@@ -16,6 +17,7 @@ struct SettingsView: View {
             lidSection
             integrationsSection
             cliSection
+            updatesSection
         }
         .formStyle(.grouped)
         .frame(width: 500)
@@ -214,6 +216,65 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: Updates
+
+    @ViewBuilder
+    private var updatesSection: some View {
+        @Bindable var updater = updater
+        Section {
+            Toggle("Check for updates automatically", isOn: $updater.automaticallyChecks)
+            Toggle(isOn: $updater.automaticallyInstalls) {
+                Text("Install updates automatically")
+                Text("No Sleep restarts itself in a second and picks up where it left off.")
+            }
+            .disabled(!updater.automaticallyChecks)
+            LabeledContent {
+                HStack(spacing: 8) {
+                    updateStatus
+                    if case .available = updater.state {
+                        Button("Install Now", action: updater.installNow)
+                            .buttonStyle(.borderedProminent)
+                            .tint(.red)
+                    } else {
+                        Button("Check Now", action: updater.checkNow)
+                            .disabled(updater.isBusy)
+                    }
+                }
+            } label: {
+                Text("No Sleep \(updater.currentVersion)")
+                if let checked = updater.lastChecked {
+                    Text("Last checked \(checked.formatted(.relative(presentation: .named)))")
+                }
+            }
+        } header: {
+            Text("Updates")
+        } footer: {
+            Text("Updates come from GitHub Releases and are installed only if they're signed by the same developer as this copy.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatus: some View {
+        switch updater.state {
+        case .idle:
+            EmptyView()
+        case .checking, .downloading, .installing:
+            ProgressView().controlSize(.small)
+            Text(updater.state == .checking ? "Checking…" : updater.state == .downloading ? "Downloading…" : "Installing…")
+                .foregroundStyle(.secondary)
+        case .upToDate:
+            Label("Up to date", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+        case .available(let version):
+            Text("\(version) is available").foregroundStyle(.secondary)
+        case .unsupported(let version):
+            Text("\(version) is out, no download for this Mac yet").foregroundStyle(.secondary)
+        case .failed(let message):
+            Text(message).foregroundStyle(.red).lineLimit(2)
+        }
+    }
+
     // MARK: CLI
 
     private var cliSection: some View {
@@ -323,9 +384,9 @@ private struct ExampleCommand: View {
 final class SettingsWindowController {
     private var window: NSWindow?
 
-    func show(controller: SleepController, integrations: Integrations) {
+    func show(controller: SleepController, integrations: Integrations, updater: Updater) {
         if window == nil {
-            let hosting = NSHostingController(rootView: SettingsView(controller: controller, integrations: integrations))
+            let hosting = NSHostingController(rootView: SettingsView(controller: controller, integrations: integrations, updater: updater))
             let window = NSWindow(contentViewController: hosting)
             window.title = "No Sleep Settings"
             window.styleMask = [.titled, .closable, .miniaturizable]
