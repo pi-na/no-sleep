@@ -38,6 +38,13 @@ enum Snapshot {
                 to: output.appendingPathComponent("menu-\(scenario)-\(name).png")
             )
         }
+        // Approximates the real panel: translucent material over a mid-gray desktop in dark mode.
+        render(
+            MenuContentView(controller: controller, integrations: integrations, openSettings: {})
+                .background(Color(white: 0.48)),
+            appearance: .darkAqua,
+            to: output.appendingPathComponent("menu-\(scenario)-vibrant.png")
+        )
         render(
             SettingsView(controller: controller, integrations: integrations)
                 .frame(height: 980)

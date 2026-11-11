@@ -16,7 +16,8 @@ struct MenuContentView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 10)
 
-            if controller.wantsAwake || controller.lidIssue != nil {
+            if controller.wantsAwake || controller.lidIssue != nil
+                || controller.thermalTrippedAt != nil || controller.offlineTrippedAt != nil {
                 StatusSection(controller: controller)
                     .padding(.horizontal, 14)
                     .padding(.bottom, 10)
@@ -33,12 +34,7 @@ struct MenuContentView: View {
                 .padding(.vertical, 10)
 
             MenuDivider()
-            ThermalSection(controller: controller)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-
-            MenuDivider()
-            OfflineSection(controller: controller)
+            FailsafeSection(controller: controller, openSettings: openSettings)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
 
@@ -58,6 +54,9 @@ struct MenuContentView: View {
             .padding(5)
         }
         .frame(width: 320)
+        // The panel's material lets whatever is behind it bleed through; over a bright window that
+        // washes out text (red especially). A mostly-opaque base keeps everything readable.
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.82))
     }
 }
 
@@ -111,9 +110,10 @@ private struct StatusSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if controller.wantsAwake {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    reasonRow(now: context.date)
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                VStack(alignment: .leading, spacing: 6) {
+                    if controller.wantsAwake { reasonRow(now: context.date) }
+                    failsafeRows(now: context.date)
                 }
             }
             if controller.pausedForBattery, let battery = controller.battery {
@@ -150,6 +150,25 @@ private struct StatusSection: View {
             StatusRow(systemImage: "bolt.fill", tint: .red,
                       text: count == 1 ? "While \(controller.activeLeases[0].displayTitle) is working"
                                        : "While \(count) external tasks are running")
+        }
+    }
+
+    /// Live failsafe warnings (countdowns / "turned off" notices). Settings has the details.
+    @ViewBuilder
+    private func failsafeRows(now: Date) -> some View {
+        if let tripped = controller.thermalTrippedAt {
+            StatusRow(systemImage: "thermometer.high", tint: .orange,
+                      text: "Too hot — turned off at \(tripped.formatted(date: .omitted, time: .shortened))")
+        } else if controller.thermalFailsafeEnabled, let remaining = controller.thermalFailsafe.remaining(now: now) {
+            StatusRow(systemImage: "thermometer.high", tint: .orange,
+                      text: "Running hot · turns off in \(DurationParser.countdown(remaining))")
+        }
+        if let tripped = controller.offlineTrippedAt {
+            StatusRow(systemImage: "wifi.slash", tint: .orange,
+                      text: "Offline — agents released at \(tripped.formatted(date: .omitted, time: .shortened))")
+        } else if controller.offlineFailsafeEnabled, let remaining = controller.offlineWindow.remaining(now: now) {
+            StatusRow(systemImage: "wifi.exclamationmark", tint: .orange,
+                      text: "Offline · releasing agents in \(DurationParser.countdown(remaining))")
         }
     }
 
@@ -224,21 +243,30 @@ private struct TimerSection: View {
             SectionTitle("Timer")
             HStack(spacing: 4) {
                 ForEach(Self.presets, id: \.0) { preset in
-                    Button {
+                    Button(preset.0) {
                         controller.startTimer(duration: preset.1)
-                    } label: {
-                        Text(preset.0).frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(ChipButtonStyle())
                     .help("Keep awake for \(DurationParser.shortLabel(preset.1))")
                 }
             }
-            .controlSize(.small)
 
             HStack(spacing: 6) {
                 TextField("Custom: 45m, 1h30m, 18:30…", text: $customText)
-                    .textFieldStyle(.roundedBorder)
-                    .controlSize(.small)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12))
+                    .padding(.horizontal, 8)
+                    .frame(height: 24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(Color.primary.opacity(customFocused ? 0.12 : 0.07))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(customFocused ? 0.25 : 0.1), lineWidth: 1)
+                    )
                     .focused($customFocused)
+                    .focusEffectDisabled()
                     .onSubmit(startCustom)
                 if let end = parsedEnd {
                     Text("until \(end.formatted(date: Calendar.current.isDateInToday(end) ? .omitted : .abbreviated, time: .shortened))")
@@ -248,7 +276,7 @@ private struct TimerSection: View {
                         .fixedSize()
                 }
                 Button("Start", action: startCustom)
-                    .controlSize(.small)
+                    .buttonStyle(ChipButtonStyle(prominent: parsedEnd != nil, expands: false))
                     .disabled(parsedEnd == nil)
             }
         }
@@ -391,115 +419,34 @@ private struct LeaseRow: View {
     }
 }
 
-// MARK: - Thermal failsafe
+// MARK: - Failsafes
 
+/// Just the on/off state; details and toggles live in Settings to keep the menu light.
 @MainActor
-private struct ThermalSection: View {
-    @Bindable var controller: SleepController
-
-    private static let limitMinutes = Int(ThermalFailsafe.defaultLimit / 60)
+private struct FailsafeSection: View {
+    let controller: SleepController
+    let openSettings: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(spacing: 6) {
+            row("Thermal failsafe", enabled: controller.thermalFailsafeEnabled)
+            row("Offline failsafe", enabled: controller.offlineFailsafeEnabled)
+        }
+    }
+
+    private func row(_ title: String, enabled: Bool) -> some View {
+        Button(action: openSettings) {
             HStack {
-                SectionTitle("Thermal failsafe")
+                SectionTitle(title)
                 Spacer()
-                Toggle("Thermal failsafe", isOn: $controller.thermalFailsafeEnabled)
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .labelsHidden()
+                Text(enabled ? "Enabled" : "Disabled")
+                    .font(.system(size: 11, weight: enabled ? .bold : .medium))
+                    .foregroundStyle(enabled ? Color.red : Color.secondary)
             }
-            Text("Turns No Sleep off if your Mac stays hot (serious or critical thermal state) for \(Self.limitMinutes) minutes in a row.")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if controller.thermalFailsafeEnabled {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    statusRow(now: context.date)
-                }
-            }
+            .contentShape(Rectangle())
         }
-    }
-
-    @ViewBuilder
-    private func statusRow(now: Date) -> some View {
-        if let tripped = controller.thermalTrippedAt {
-            StatusRow(
-                systemImage: "thermometer.high", tint: .orange,
-                text: "Turned off at \(tripped.formatted(date: .omitted, time: .shortened))",
-                trailing: controller.thermalLockout ? "cooling down…" : "Mac cooled down"
-            )
-        } else if let remaining = controller.thermalFailsafe.remaining(now: now) {
-            StatusRow(
-                systemImage: "thermometer.high", tint: .orange,
-                text: "Running hot · turns off in \(DurationParser.countdown(remaining))"
-            )
-        } else {
-            StatusRow(
-                systemImage: controller.thermalLevel.isHot ? "thermometer.high" : "thermometer.medium",
-                tint: tint,
-                text: "Temperature: \(controller.thermalLevel.displayName)"
-            )
-        }
-    }
-
-    private var tint: Color {
-        switch controller.thermalLevel {
-        case .nominal: return .green
-        case .fair: return .yellow
-        case .serious, .critical: return .orange
-        }
-    }
-}
-
-// MARK: - Offline failsafe
-
-@MainActor
-private struct OfflineSection: View {
-    @Bindable var controller: SleepController
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                SectionTitle("Offline failsafe")
-                Spacer()
-                Toggle("Offline failsafe", isOn: $controller.offlineFailsafeEnabled)
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .labelsHidden()
-            }
-            Text("Lets your Mac sleep if agents are keeping it awake but the internet has been down for \(controller.offlineFailsafeMinutes) minutes in a row.")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if controller.offlineFailsafeEnabled {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    statusRow(now: context.date)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func statusRow(now: Date) -> some View {
-        if let tripped = controller.offlineTrippedAt {
-            StatusRow(
-                systemImage: "wifi.slash", tint: .orange,
-                text: "Released agents at \(tripped.formatted(date: .omitted, time: .shortened))",
-                trailing: "waiting for internet…"
-            )
-        } else if let remaining = controller.offlineWindow.remaining(now: now) {
-            StatusRow(
-                systemImage: "wifi.exclamationmark", tint: .orange,
-                text: "Offline · releasing agents in \(DurationParser.countdown(remaining))"
-            )
-        } else if controller.connectivity.isOnline {
-            StatusRow(systemImage: "wifi", tint: .green, text: "Internet: Online")
-        } else {
-            StatusRow(systemImage: "wifi.slash", tint: .secondary, text: "Internet: Offline")
-        }
+        .buttonStyle(.plain)
+        .help("Change in Settings")
     }
 }
 
@@ -514,6 +461,46 @@ struct SectionTitle: View {
         Text(title)
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.secondary)
+    }
+}
+
+/// Flat, adaptive button for the menu panel. System bordered buttons lose their label contrast
+/// on the translucent (vibrant) panel material in dark mode; this stays readable everywhere.
+struct ChipButtonStyle: ButtonStyle {
+    var prominent = false
+    var expands = true
+
+    func makeBody(configuration: Configuration) -> some View {
+        ChipBody(configuration: configuration, prominent: prominent, expands: expands)
+    }
+
+    private struct ChipBody: View {
+        let configuration: ButtonStyleConfiguration
+        let prominent: Bool
+        let expands: Bool
+        @Environment(\.isEnabled) private var isEnabled
+        @State private var hovering = false
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 12, weight: .medium).monospacedDigit())
+                .foregroundStyle(prominent ? Color.white : Color.primary)
+                .padding(.horizontal, 8)
+                .frame(maxWidth: expands ? .infinity : nil)
+                .frame(height: 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(prominent ? Color.red.opacity(configuration.isPressed ? 0.75 : 1)
+                                        : Color.primary.opacity(configuration.isPressed ? 0.22 : hovering ? 0.14 : 0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(prominent ? 0 : 0.08), lineWidth: 1)
+                )
+                .opacity(isEnabled ? 1 : 0.45)
+                .contentShape(Rectangle())
+                .onHover { hovering = $0 }
+        }
     }
 }
 

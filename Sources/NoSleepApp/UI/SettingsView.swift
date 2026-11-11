@@ -12,8 +12,8 @@ struct SettingsView: View {
     var body: some View {
         Form {
             generalSection
-            lidSection
             failsafeSection
+            lidSection
             integrationsSection
             cliSection
         }
@@ -106,16 +106,27 @@ struct SettingsView: View {
         Section {
             Toggle(isOn: $controller.thermalFailsafeEnabled) {
                 Text("Thermal failsafe")
-                Text("Turn No Sleep off if the Mac stays hot for 20 minutes in a row.")
+                Text("Turns No Sleep off if your Mac stays hot (serious or critical thermal state, as reported by macOS) for 20 minutes in a row while it's being kept awake. Agents can't turn it back on until it cools down.")
             }
+            LabeledContent("Temperature now") {
+                Label(controller.thermalLevel.displayName,
+                      systemImage: controller.thermalLevel.isHot ? "thermometer.high" : "thermometer.medium")
+                    .foregroundStyle(controller.thermalLevel.isHot ? Color.orange : Color.secondary)
+            }
+
             Toggle(isOn: $controller.offlineFailsafeEnabled) {
                 Text("Offline failsafe")
-                Text("Stop keeping the Mac awake for agents when the internet is down.")
+                Text("If Claude Code, Codex or T3 Code agents are keeping your Mac awake but the internet is down, let it sleep. Your own toggle and timers aren't affected.")
             }
             if controller.offlineFailsafeEnabled {
                 Picker("Internet down for", selection: $controller.offlineFailsafeMinutes) {
                     ForEach([5, 10, 15, 20, 30, 45, 60], id: \.self) { Text("\($0) minutes").tag($0) }
                 }
+            }
+            LabeledContent("Internet now") {
+                Label(controller.connectivity.isOnline ? "Online" : "Offline",
+                      systemImage: controller.connectivity.isOnline ? "wifi" : "wifi.slash")
+                    .foregroundStyle(controller.connectivity.isOnline ? Color.secondary : Color.orange)
             }
         } header: {
             Text("Failsafes")
