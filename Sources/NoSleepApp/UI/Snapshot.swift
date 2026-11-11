@@ -23,6 +23,8 @@ enum Snapshot {
         case "tripped":
             controller.setEnabled(true)
             controller.simulateThermal(level: .critical, hotFor: ThermalFailsafe.defaultLimit + 1)
+        case "offline":
+            controller.simulateOffline(for: 3 * 60 + 9)
         default: break
         }
         controller.refresh()

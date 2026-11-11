@@ -13,7 +13,7 @@
 
 It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 
-<p align="center"><img src="assets/gallery.png" alt="Off, timer and thermal failsafe states" width="100%"></p>
+<p align="center"><img src="assets/gallery.png" alt="Off, timer and offline failsafe states" width="100%"></p>
 
 ## What it does
 
@@ -21,6 +21,8 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 - **Timers right in the menu.** 15m, 30m, 1h, 2h, 4h, 8h, or type whatever: `45m`, `1h30m`, `18:30`, `9am`.
 - **Agent mode.** It stays awake while **Claude Code**, **Codex** or **T3 Code** threads are working, then goes back to normal when they're done, interrupted or crash.
 - **Thermal failsafe.** If your Mac runs hot for 20 minutes straight, No Sleep switches itself off. That's what you want when it's closed in a backpack.
+- **Offline failsafe.** Agents keeping your Mac up but the internet's been dead for 15 minutes (configurable)? No point staying awake, so it lets go. If the lid is closed, the Mac goes to sleep right then.
+- **Go Dark.** One click turns the screen off and mutes the sound. Perfect for letting an agent grind overnight.
 - **Low-battery guard.** It also lets your Mac sleep once the battery gets low (10% by default).
 - **Plays nice.** Quitting always gives your Mac its normal sleep back.
 

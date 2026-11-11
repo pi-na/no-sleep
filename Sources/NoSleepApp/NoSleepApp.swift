@@ -63,6 +63,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow.show(controller: controller, integrations: integrations)
     }
 
+    /// Mute and turn the screen off. Closes the menu first so the click doesn't wake the display.
+    func goDark() {
+        if let panel = NSApp.keyWindow, panel is NSPanel { panel.close() }
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.4) {
+            GoDark.run()
+        }
+    }
+
     func quitFromMenu() {
         quittingFromMenu = true
         NSApp.terminate(nil)

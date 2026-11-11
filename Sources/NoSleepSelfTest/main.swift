@@ -215,5 +215,23 @@ test("thermal failsafe") {
     check(ThermalLevel(ProcessInfo.ThermalState.critical) == .critical, "maps ProcessInfo state")
 }
 
+// MARK: Offline failsafe
+
+test("sustained condition") {
+    let t0 = Date()
+    var offline = SustainedCondition(limit: 15 * 60)
+    check(!offline.observe(true, now: t0), "starts counting")
+    check(offline.remaining(now: t0.addingTimeInterval(60)) == 14 * 60, "14 min left")
+    check(!offline.observe(true, now: t0.addingTimeInterval(14 * 60)), "14 min: not yet")
+    check(offline.observe(true, now: t0.addingTimeInterval(15 * 60)), "15 min: fires")
+    check(offline.since == nil, "restarts after firing")
+    _ = offline.observe(true, now: t0)
+    _ = offline.observe(false, now: t0.addingTimeInterval(5 * 60))
+    check(!offline.observe(true, now: t0.addingTimeInterval(16 * 60)), "back online resets the window")
+
+    check(Lease(id: "a", source: "claude").isAgent && Lease(id: "b", source: "codex").isAgent, "agent leases")
+    check(!Lease(id: "c", source: "cli").isAgent, "cli lease is not an agent")
+}
+
 print(failures == 0 ? "All \(checks) checks passed." : "\(failures) of \(checks) checks failed.")
 exit(failures == 0 ? 0 : 1)

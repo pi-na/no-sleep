@@ -13,6 +13,7 @@ struct SettingsView: View {
         Form {
             generalSection
             lidSection
+            failsafeSection
             integrationsSection
             cliSection
         }
@@ -94,6 +95,32 @@ struct SettingsView: View {
             Text("Lid closed")
         } footer: {
             Text("Granting adds a rule in /etc/sudoers.d/nosleep that only allows `pmset -a disablesleep 0` and `1` without a password. You're asked once; quitting No Sleep always restores normal sleep.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: Failsafes
+
+    private var failsafeSection: some View {
+        Section {
+            Toggle(isOn: $controller.thermalFailsafeEnabled) {
+                Text("Thermal failsafe")
+                Text("Turn No Sleep off if the Mac stays hot for 20 minutes in a row.")
+            }
+            Toggle(isOn: $controller.offlineFailsafeEnabled) {
+                Text("Offline failsafe")
+                Text("Stop keeping the Mac awake for agents when the internet is down.")
+            }
+            if controller.offlineFailsafeEnabled {
+                Picker("Internet down for", selection: $controller.offlineFailsafeMinutes) {
+                    ForEach([5, 10, 15, 20, 30, 45, 60], id: \.self) { Text("\($0) minutes").tag($0) }
+                }
+            }
+        } header: {
+            Text("Failsafes")
+        } footer: {
+            Text("When a failsafe kicks in with the lid closed, your Mac goes to sleep right away.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }

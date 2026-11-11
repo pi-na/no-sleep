@@ -38,7 +38,16 @@ struct MenuContentView: View {
                 .padding(.vertical, 10)
 
             MenuDivider()
+            OfflineSection(controller: controller)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+
+            MenuDivider()
             VStack(spacing: 0) {
+                MenuActionRow(title: "Go Dark", subtitle: "Screen off · sound muted", shortcut: "⌘D") {
+                    (NSApp.delegate as? AppDelegate)?.goDark()
+                }
+                .keyboardShortcut("d", modifiers: .command)
                 MenuActionRow(title: "Settings…", shortcut: "⌘,", action: openSettings)
                     .keyboardShortcut(",", modifiers: .command)
                 MenuActionRow(title: "Quit No Sleep", shortcut: "⌘Q") {
@@ -444,6 +453,56 @@ private struct ThermalSection: View {
     }
 }
 
+// MARK: - Offline failsafe
+
+@MainActor
+private struct OfflineSection: View {
+    @Bindable var controller: SleepController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                SectionTitle("Offline failsafe")
+                Spacer()
+                Toggle("Offline failsafe", isOn: $controller.offlineFailsafeEnabled)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .labelsHidden()
+            }
+            Text("Lets your Mac sleep if agents are keeping it awake but the internet has been down for \(controller.offlineFailsafeMinutes) minutes in a row.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if controller.offlineFailsafeEnabled {
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    statusRow(now: context.date)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func statusRow(now: Date) -> some View {
+        if let tripped = controller.offlineTrippedAt {
+            StatusRow(
+                systemImage: "wifi.slash", tint: .orange,
+                text: "Released agents at \(tripped.formatted(date: .omitted, time: .shortened))",
+                trailing: "waiting for internet…"
+            )
+        } else if let remaining = controller.offlineWindow.remaining(now: now) {
+            StatusRow(
+                systemImage: "wifi.exclamationmark", tint: .orange,
+                text: "Offline · releasing agents in \(DurationParser.countdown(remaining))"
+            )
+        } else if controller.connectivity.isOnline {
+            StatusRow(systemImage: "wifi", tint: .green, text: "Internet: Online")
+        } else {
+            StatusRow(systemImage: "wifi.slash", tint: .secondary, text: "Internet: Offline")
+        }
+    }
+}
+
 // MARK: - Building blocks
 
 @MainActor
@@ -469,14 +528,20 @@ struct MenuDivider: View {
 @MainActor
 struct MenuActionRow: View {
     let title: String
+    var subtitle: String?
     var shortcut: String?
     let action: () -> Void
     @State private var hovering = false
 
     var body: some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 6) {
                 Text(title)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11))
+                        .foregroundStyle(hovering ? Color.white.opacity(0.8) : Color.secondary)
+                }
                 Spacer()
                 if let shortcut {
                     Text(shortcut).foregroundStyle(hovering ? Color.white.opacity(0.8) : Color.secondary)

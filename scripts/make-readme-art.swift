@@ -162,7 +162,7 @@ render(width: heroWidth, height: heroHeight, to: "hero.png") { canvas in
 let gallery: [(String, String)] = [
     ("menu-off-light.png", "Chill: Mac naps normally"),
     ("menu-timer-light.png", "Timer: awake for 1h 23m"),
-    ("menu-hot-light.png", "Thermal failsafe watching"),
+    ("menu-offline-light.png", "Wi-Fi died? Agents let go"),
 ]
 let panels = gallery.map { image($0.0) }
 let gap: CGFloat = 44

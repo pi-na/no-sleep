@@ -28,6 +28,8 @@ final class SleepController {
         static let batteryGuardThreshold = "batteryGuardThreshold"
         static let lidAppliedByUs = "lidAppliedByUs"
         static let thermalFailsafeEnabled = "thermalFailsafeEnabled"
+        static let offlineFailsafeEnabled = "offlineFailsafeEnabled"
+        static let offlineFailsafeMinutes = "offlineFailsafeMinutes"
     }
 
     // MARK: State
@@ -79,6 +81,27 @@ final class SleepController {
         }
     }
 
+    /// Lets the Mac sleep if agents are holding it awake while the internet is down for a while.
+    var offlineFailsafeEnabled: Bool {
+        didSet {
+            defaults.set(offlineFailsafeEnabled, forKey: Keys.offlineFailsafeEnabled)
+            if !offlineFailsafeEnabled {
+                offlineWindow.reset()
+                offlineLockout = false
+                offlineTrippedAt = nil
+            }
+            update()
+        }
+    }
+
+    var offlineFailsafeMinutes: Int {
+        didSet {
+            defaults.set(offlineFailsafeMinutes, forKey: Keys.offlineFailsafeMinutes)
+            offlineWindow.limit = TimeInterval(offlineFailsafeMinutes * 60)
+            update()
+        }
+    }
+
     var agentIdleTimeoutMinutes: Int {
         didSet { defaults.set(agentIdleTimeoutMinutes, forKey: NoSleepConstants.agentIdleTimeoutKey) }
     }
@@ -95,6 +118,13 @@ final class SleepController {
     private(set) var thermalTrippedAt: Date?
     /// After tripping, agents can't turn No Sleep back on until the Mac cools down.
     private(set) var thermalLockout = false
+    let connectivity = Connectivity()
+    private(set) var offlineWindow = SustainedCondition(limit: 15 * 60)
+    /// When the offline failsafe last released the agents.
+    private(set) var offlineTrippedAt: Date?
+    /// After tripping, agent leases are ignored until the internet is back.
+    private(set) var offlineLockout = false
+
     /// Snapshot/debug only: pretend to be at this thermal level.
     var thermalOverride: ThermalLevel?
 
@@ -104,8 +134,11 @@ final class SleepController {
 
     var activeLeases: [Lease] {
         guard externalTriggersEnabled, !thermalLockout else { return [] }
-        return leases.filter { !dismissedLeaseIDs.contains($0.id) }
+        return leases.filter { !dismissedLeaseIDs.contains($0.id) && !(offlineLockout && $0.isAgent) }
     }
+
+    /// An LLM agent (Claude Code / Codex / T3 Code) is currently holding the Mac awake.
+    var agentsHoldingAwake: Bool { activeLeases.contains(where: \.isAgent) }
 
     /// What the user asked for (drives the toggle).
     var wantsAwake: Bool { manualEnabled || timerActive || !activeLeases.isEmpty }
@@ -145,6 +178,8 @@ final class SleepController {
             Keys.batteryGuardEnabled: true,
             Keys.batteryGuardThreshold: 10,
             Keys.thermalFailsafeEnabled: true,
+            Keys.offlineFailsafeEnabled: true,
+            Keys.offlineFailsafeMinutes: 15,
             NoSleepConstants.agentIdleTimeoutKey: NoSleepConstants.defaultAgentIdleTimeoutMinutes,
         ])
         manualEnabled = defaults.bool(forKey: Keys.manualEnabled)
@@ -156,6 +191,9 @@ final class SleepController {
         batteryGuardThreshold = defaults.integer(forKey: Keys.batteryGuardThreshold)
         agentIdleTimeoutMinutes = defaults.integer(forKey: NoSleepConstants.agentIdleTimeoutKey)
         thermalFailsafeEnabled = defaults.bool(forKey: Keys.thermalFailsafeEnabled)
+        offlineFailsafeEnabled = defaults.bool(forKey: Keys.offlineFailsafeEnabled)
+        offlineFailsafeMinutes = max(1, defaults.integer(forKey: Keys.offlineFailsafeMinutes))
+        offlineWindow = SustainedCondition(limit: TimeInterval(offlineFailsafeMinutes * 60))
 
         // If we left `disablesleep 1` behind (crash, logout…), treat it as currently applied so the
         // first update() either keeps it (still wanted) or restores normal sleep.
@@ -168,6 +206,10 @@ final class SleepController {
     }
 
     func start() {
+        connectivity.onChange = { [weak self] in
+            DispatchQueue.main.async { self?.refresh() }
+        }
+        connectivity.start()
         scheduleTimerFire()
         refresh()
 
@@ -259,6 +301,27 @@ final class SleepController {
         thermalFailsafe = ThermalFailsafe(hotSince: Date().addingTimeInterval(-hotFor))
     }
 
+    private func checkOfflineFailsafe() {
+        let online = connectivity.isOnline
+        if offlineLockout, online {
+            offlineLockout = false
+            offlineTrippedAt = nil
+        }
+        let watching = offlineFailsafeEnabled && agentsHoldingAwake
+        connectivity.setProbing(watching)
+        guard offlineFailsafeEnabled else { return }
+        guard offlineWindow.observe(watching && !online) else { return }
+        // Agents can't do anything without internet: stop keeping the Mac awake for them.
+        offlineTrippedAt = Date()
+        offlineLockout = true
+    }
+
+    /// Debug/snapshot helper.
+    func simulateOffline(for duration: TimeInterval) {
+        connectivity.override = false
+        offlineWindow = SustainedCondition(limit: offlineWindow.limit, since: Date().addingTimeInterval(-duration))
+    }
+
     private func checkThermalFailsafe() {
         if thermalLockout, !thermalLevel.isHot { thermalLockout = false }
         guard thermalFailsafeEnabled else { return }
@@ -276,6 +339,7 @@ final class SleepController {
     private func update(userInitiated: Bool = false) {
         if let end = timerEnd, end <= Date() { timerEnd = nil }
         checkThermalFailsafe()
+        checkOfflineFailsafe()
         if dryRun { return }
         let active = isActive
         idleAssertion.set(active)
@@ -299,6 +363,7 @@ final class SleepController {
         lidRequested = wanted
         lidQueue.async {
             let ok = LidSleepControl.setSleepDisabled(wanted)
+            if ok, !wanted { LidSleepControl.sleepIfLidClosed() }
             DispatchQueue.main.async { [weak self] in
                 self?.lidCallFinished(wanted: wanted, ok: ok)
             }

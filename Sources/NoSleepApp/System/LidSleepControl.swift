@@ -1,4 +1,5 @@
 import Foundation
+import IOKit
 
 /// Controls `pmset -a disablesleep`, the only switch that keeps a MacBook awake with the lid closed.
 ///
@@ -41,6 +42,28 @@ enum LidSleepControl {
     @discardableResult
     static func setSleepDisabled(_ disabled: Bool) -> Bool {
         run("/usr/bin/sudo", ["-n", pmsetPath, "-a", "disablesleep", disabled ? "1" : "0"]).status == 0
+    }
+
+    /// True when the lid is closed and macOS would sleep because of it (no external display).
+    /// With `disablesleep 1` macOS reports `AppleClamshellCausesSleep = No`, so read it *after* restoring.
+    static func closedLidWouldSleep() -> Bool {
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPMrootDomain"))
+        guard service != 0 else { return false }
+        defer { IOObjectRelease(service) }
+        func flag(_ key: String) -> Bool {
+            (IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?
+                .takeRetainedValue() as? Bool) ?? false
+        }
+        return flag("AppleClamshellState") && flag("AppleClamshellCausesSleep")
+    }
+
+    /// Normal sleep was just restored: if the lid is already closed, sleep now instead of
+    /// waiting for macOS to notice (it doesn't re-check the lid until something changes).
+    static func sleepIfLidClosed() {
+        Thread.sleep(forTimeInterval: 1)
+        if closedLidWouldSleep() {
+            run(pmsetPath, ["sleepnow"])
+        }
     }
 
     static func sudoersRule(for user: String) -> String {
