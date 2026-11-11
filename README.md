@@ -40,15 +40,37 @@ The first time you enable it, macOS asks for your password **once** so lid-close
 
 On macOS 14–26 or an Intel Mac? [Build it from source](#build-from-source), it takes about a minute.
 
-## Hook up your agents
+## Setup your agents
 
-Click **Settings → Agent integrations → Connect**, or run:
+No Sleep listens to your agents through their **hooks**. While a turn is running (prompt sent, tools firing) the agent holds a lease that keeps your Mac awake. When the turn ends, gets interrupted, or the agent dies, the lease goes away and your Mac can nap again.
+
+### Claude Code
+
+1. Open **No Sleep → Settings… → Agent integrations** and hit **Connect** next to Claude Code.
+   Terminal person? `/Applications/NoSleep.app/Contents/Helpers/nosleep connect claude`
+2. That's it. Claude Code picks up hooks live, so even sessions that are already open start reporting.
+3. Send a prompt and open the menu. You'll see **Claude Code · your-project** under *External triggers*.
+
+It adds `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` and `SessionEnd` hooks to `~/.claude/settings.json`. Your other hooks stay put, and the first time it saves a backup next to the file.
+
+### Codex
+
+1. **Settings… → Agent integrations → Connect** next to Codex (or `nosleep connect codex`). This writes `~/.codex/hooks.json`.
+2. Restart Codex. It asks you to **review the new hooks**. Approve them, since Codex won't run hooks you haven't reviewed.
+3. Run something and check the menu. Hitting <kbd>Esc</kbd> to interrupt a turn releases the lease too.
+
+### T3 Code
+
+T3 Code threads run on Claude Code and Codex under the hood, so **connect those two and you're done**. No extra setup. Threads show up in the menu as **T3 Code · Claude Code** / **T3 Code · Codex**.
+
+### Is it working?
 
 ```sh
-/Applications/NoSleep.app/Contents/Helpers/nosleep connect all   # claude | codex | all
+/Applications/NoSleep.app/Contents/Helpers/nosleep list
+# claude-3f2a…   T3 Code · Claude Code — my-app   (expires 1:42 AM)   [pid 48705]
 ```
 
-That adds a few hooks to `~/.claude/settings.json` and `~/.codex/hooks.json` (your existing config stays untouched, and a backup is saved). T3 Code runs on top of both, so its threads are covered too. Codex asks you to approve new hooks the next time it starts.
+Safety nets: if an agent goes quiet for an hour (configurable), its lease expires. If the internet's down for 15 minutes, the **Offline failsafe** lets go too. To undo everything, hit **Disconnect** in Settings or run `nosleep disconnect all`.
 
 ## CLI
 
@@ -70,6 +92,8 @@ git clone https://github.com/pi-na/no-sleep && cd no-sleep
 scripts/build-app.sh --install        # universal build → /Applications
 scripts/package-dmg.sh 27.0 macos27   # Apple Silicon DMG for a given minimum macOS
 ```
+
+Builds get signed with a local self-signed identity (`scripts/signing-identity.sh` creates it once, in its own keychain). That keeps the signature stable between builds, so macOS doesn't treat every update as a brand-new app and **Open at login** stays on.
 
 ## License
 

@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         writePIDFile()
+        LoginItem.restoreIfNeeded()
         integrations.refresh()
         controller.start()
     }
