@@ -141,6 +141,22 @@ struct SettingsView: View {
 
     private var integrationsSection: some View {
         Section {
+            LabeledContent {
+                if integrations.allAgentsInstalled {
+                    HStack(spacing: 8) {
+                        Label("All connected", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Button("Disconnect All") { integrations.disconnectAll() }
+                    }
+                } else {
+                    Button("Connect All") { integrations.connectAll() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                }
+            } label: {
+                Text("Hook up your agents")
+                Text("Connects Claude Code and Codex in one go, which covers T3 Code threads too. Same as `nosleep connect all`.")
+            }
             AgentRow(
                 name: "Claude Code",
                 systemImage: "sparkle",

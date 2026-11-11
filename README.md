@@ -44,6 +44,8 @@ On macOS 14–15 or an Intel Mac? [Build it from source](#build-from-source), it
 
 No Sleep listens to your agents through their **hooks**. While a turn is running (prompt sent, tools firing) the agent holds a lease that keeps your Mac awake. When the turn ends, gets interrupted, or the agent dies, the lease goes away and your Mac can nap again.
 
+**Fastest way:** open **No Sleep → Settings… → Agent integrations** and hit **Connect All**. That's Claude Code, Codex and T3 Code done in one click. Want the details per agent? Read on.
+
 ### Claude Code
 
 1. Open **No Sleep → Settings… → Agent integrations** and hit **Connect** next to Claude Code.

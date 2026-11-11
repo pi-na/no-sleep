@@ -47,7 +47,7 @@ enum Snapshot {
         )
         render(
             SettingsView(controller: controller, integrations: integrations)
-                .frame(height: 980)
+                .frame(height: 1500)
                 .background(Color(nsColor: .windowBackgroundColor)),
             appearance: .aqua,
             to: output.appendingPathComponent("settings.png")

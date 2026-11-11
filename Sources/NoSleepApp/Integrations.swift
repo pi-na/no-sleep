@@ -35,6 +35,7 @@ final class Integrations {
     }
 
     var anyAgentInstalled: Bool { claudeStatus != .notInstalled || codexStatus != .notInstalled }
+    var allAgentsInstalled: Bool { claudeStatus == .installed && codexStatus == .installed }
 
     func installer(for agent: AgentKind) -> HookInstaller {
         HookInstaller(agent: agent, cliPath: cliPath)
@@ -53,6 +54,20 @@ final class Integrations {
 
     func install(_ agent: AgentKind) {
         perform { try self.installer(for: agent).install() }
+    }
+
+    /// Same as `nosleep connect all`: Claude Code + Codex (which also covers T3 Code threads).
+    func connectAll() {
+        perform {
+            for agent in AgentKind.allCases { try self.installer(for: agent).install() }
+        }
+    }
+
+    /// Same as `nosleep disconnect all`.
+    func disconnectAll() {
+        perform {
+            for agent in AgentKind.allCases { try self.installer(for: agent).uninstall() }
+        }
     }
 
     func uninstall(_ agent: AgentKind) {
