@@ -48,7 +48,7 @@ struct MenuContentView: View {
                 if let updater, case .available(let version) = updater.state, !updater.automaticallyInstalls {
                     MenuActionRow(title: "Update to \(version)", subtitle: "restarts No Sleep", action: updater.installNow)
                 }
-                MenuActionRow(title: "Go Dark", subtitle: "Screen off · sound muted", shortcut: "⌘D", action: goDark)
+                MenuActionRow(title: "Go Dark", subtitle: "Screen black · sound muted", shortcut: "⌘D", action: goDark)
                 .keyboardShortcut("d", modifiers: .command)
                 MenuActionRow(title: "Settings…", shortcut: "⌘,", action: openSettings)
                     .keyboardShortcut(",", modifiers: .command)

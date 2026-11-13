@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var relaunchingForUpdate = false
     private let settingsWindow = SettingsWindowController()
     private var quittingFromMenu = false
+    private let goDarkSession = GoDarkSession()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if Snapshot.runIfRequested(controller: controller, integrations: integrations) {
@@ -54,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        goDarkSession.end() // Never leave the screen black behind us (quit, update relaunch).
         controller.shutdown(forget: quittingFromMenu, keepLidState: relaunchingForUpdate)
         try? FileManager.default.removeItem(at: NoSleepPaths.appPIDFile)
     }
@@ -71,12 +73,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow.show(controller: controller, integrations: integrations, updater: updater)
     }
 
-    /// Mute and turn the screen off. Closes the menu first so the click doesn't wake the display.
+    /// Mute and take the screen to black. Closes the menu first so it isn't left on screen.
     func goDark() {
         if let panel = NSApp.keyWindow, panel is NSPanel { panel.close() }
-        // Give the click time to finish so it doesn't immediately wake the display again.
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.6) {
-            GoDark.run()
+        // Give the click time to finish so it doesn't immediately bring the screen back.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [goDarkSession] in
+            goDarkSession.start()
         }
     }
 

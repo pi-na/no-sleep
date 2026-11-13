@@ -12,8 +12,11 @@ CONTENTS=$APP/Contents
 read -r -a ARCHS <<< "${ARCHS:-arm64 x86_64}"
 
 echo "▸ Running self-tests"
-swift build -c release --product nosleep-selftest >"${TMPDIR:-/tmp}/nosleep-selftest-build.log" 2>&1 || { grep -E "error" "${TMPDIR:-/tmp}/nosleep-selftest-build.log"; exit 1; }
-"$(swift build -c release --show-bin-path 2>/dev/null)/nosleep-selftest"
+# They run on this Mac, so build them for this Mac's macOS, not the release's minimum (a macOS 26 build
+# can't run on a macOS 14 build host).
+SELFTEST=(env -u NOSLEEP_MIN_MACOS swift build -c release --scratch-path .build/selftest)
+"${SELFTEST[@]}" --product nosleep-selftest >"${TMPDIR:-/tmp}/nosleep-selftest-build.log" 2>&1 || { grep -E "error" "${TMPDIR:-/tmp}/nosleep-selftest-build.log"; exit 1; }
+"$("${SELFTEST[@]}" --show-bin-path 2>/dev/null)/nosleep-selftest"
 
 LOG=$(mktemp)
 BINS=()

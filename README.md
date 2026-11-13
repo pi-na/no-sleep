@@ -22,14 +22,14 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 - **Agent mode.** It stays awake while **Claude Code**, **Codex** or **T3 Code** threads are working, then goes back to normal when they're done, interrupted or crash.
 - **Thermal failsafe.** If your Mac runs hot for 20 minutes straight, No Sleep switches itself off. That's what you want when it's closed in a backpack.
 - **Offline failsafe.** Agents keeping your Mac up but the internet's been dead for 15 minutes (configurable)? No point staying awake, so it lets go. If the lid is closed, the Mac goes to sleep right then.
-- **Go Dark.** One click turns the screen off and mutes the sound. Perfect for letting an agent grind overnight.
+- **Go Dark.** One click dims the screen to black and mutes the sound. Any key or mouse move brings it back. It dims instead of sleeping the display, so macOS never locks the session and agents can keep clicking through dialogs overnight.
 - **Low-battery guard.** It also lets your Mac sleep once the battery gets low (10% by default).
 - **Updates itself.** It checks GitHub Releases, grabs the build for your macOS, makes sure it's signed by the same developer, swaps itself and restarts. No server, no nagging.
 - **Plays nice.** Quitting always gives your Mac its normal sleep back.
 
 ## Installation - Releases
 
-1. Grab the latest `.dmg` for your macOS from **[Releases →](https://github.com/pi-na/no-sleep/releases/latest)**: `…-macos26-…` for Tahoe, `…-macos27-…` for macOS 27 (both Apple Silicon).
+1. Grab the latest `.dmg` for your macOS from **[Releases →](https://github.com/pi-na/no-sleep/releases/latest)**: `…-macos14-…` for Sonoma and Sequoia, `…-macos26-…` for Tahoe, `…-macos27-…` for macOS 27 (all Apple Silicon).
 2. Open it and drag **No Sleep** into **Applications**.
 3. It isn't notarized by Apple yet, so macOS won't open it on the first try. Run this once:
    ```sh
@@ -82,7 +82,7 @@ nosleep run -- make release      # stay awake while this runs
 nosleep for 1h30m                # stay awake for a bit
 nosleep acquire backup --pid 42  # stay awake until a process exits
 nosleep list                     # who's keeping the Mac up?
-nosleep dark                     # Go Dark: screen off + mute
+nosleep dark                     # Go Dark: screen black + mute (brightness keys bring it back)
 ```
 
 You can install it into `~/.local/bin` from Settings.
@@ -101,7 +101,7 @@ Got an Apple Developer account? Set `DEVELOPER_ID="Developer ID Application: You
 
 Otherwise, builds get signed with a local self-signed identity (`scripts/signing-identity.sh` creates it once, in its own keychain). That keeps the signature stable between builds, so macOS doesn't treat every update as a brand-new app and **Open at login** stays on. It also means the auto-updater only accepts builds signed with that same key, so ship releases from the same Mac (or carry the keychain over).
 
-**Shipping an update:** bump `CFBundleShortVersionString` in `Resources/Info.plist`, then `scripts/package-dmg.sh 26.0 macos26 && scripts/package-dmg.sh 27.0 macos27`, then `gh release create vX.Y.Z build/*-macos2*.dmg --latest`. Installed copies pick it up within a few hours. Keep the `NoSleep-<version>-macos<NN>-apple-silicon.dmg` naming, because that's how the updater finds the right file.
+**Shipping an update:** bump `CFBundleShortVersionString` in `Resources/Info.plist`, then `scripts/package-dmg.sh 14.0 macos14 && scripts/package-dmg.sh 26.0 macos26 && scripts/package-dmg.sh 27.0 macos27`, then `gh release create vX.Y.Z build/NoSleep-X.Y.Z-macos*.dmg --latest`. Installed copies pick it up within a few hours. Keep the `NoSleep-<version>-macos<NN>-apple-silicon.dmg` naming, because that's how the updater finds the right file.
 
 ## License
 

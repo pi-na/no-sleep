@@ -19,7 +19,7 @@ USAGE
   nosleep list                           Show active leases
   nosleep clear                          Drop all leases
   nosleep status                         Show whether the app is running
-  nosleep dark                           Go Dark: mute the sound and turn the screen off
+  nosleep dark                           Go Dark: mute the sound and dim the screen to black
   nosleep connect claude|codex|all       Install agent hooks (Claude Code, Codex; covers T3 Code)
   nosleep disconnect claude|codex|all    Remove agent hooks
   nosleep hook claude|codex              Agent hook entry point (reads hook JSON on stdin)
