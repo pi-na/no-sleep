@@ -147,6 +147,7 @@ final class SleepController {
     /// After tripping, agents can't turn No Sleep back on until the Mac cools down.
     private(set) var thermalLockout = false
     let connectivity = Connectivity()
+    let wifiFallback = WiFiFallback()
     private(set) var offlineWindow = SustainedCondition(limit: 15 * 60)
     /// When the offline failsafe last released the agents.
     private(set) var offlineTrippedAt: Date?
@@ -249,6 +250,7 @@ final class SleepController {
             DispatchQueue.main.async { self?.refresh() }
         }
         connectivity.start()
+        wifiFallback.onChange = { [weak self] in self?.update() }
         scheduleTimerFire()
         refresh()
 
@@ -356,7 +358,7 @@ final class SleepController {
             offlineTrippedAt = nil
         }
         let watching = offlineFailsafeEnabled && agentsHoldingAwake
-        connectivity.setProbing(watching)
+        connectivity.setProbing(watching || wifiFallback.enabled)
         guard offlineFailsafeEnabled else { return }
         guard offlineWindow.observe(watching && !online) else { return }
         // Agents can't do anything without internet: stop keeping the Mac awake for them.
@@ -389,6 +391,7 @@ final class SleepController {
         checkThermalFailsafe()
         checkOfflineFailsafe()
         if dryRun { return }
+        wifiFallback.tick(internet: connectivity.internet)
         let active = isActive
         idleAssertion.set(active)
         displayAssertion.set(active && keepDisplayAwake)

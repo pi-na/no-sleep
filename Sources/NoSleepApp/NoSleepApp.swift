@@ -38,6 +38,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if Snapshot.runIfRequested(controller: controller, integrations: integrations) {
             exit(0)
         }
+        if WiFiFallback.runDebugIfRequested() {
+            exit(0)
+        }
 
         // Only one copy may manage sleep settings.
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: NoSleepConstants.bundleIdentifier)

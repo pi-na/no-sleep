@@ -15,6 +15,8 @@ enum Snapshot {
 
         let scenario = ProcessInfo.processInfo.environment["NOSLEEP_SNAPSHOT_STATE"] ?? "off"
         controller.setManual(false) // start clean: the previous snapshot run left its state in defaults
+        controller.wifiFallback.enabled = scenario == "wifi"
+        controller.wifiFallback.ssid = scenario == "wifi" ? "iPhone de Tomas" : nil
         switch scenario {
         case "on": controller.setManual(true)
         case "timer": controller.startTimer(duration: 5025)
@@ -32,6 +34,7 @@ enum Snapshot {
             controller.refresh()
             if scenario == "both" { controller.setManual(true) }
             if scenario == "ignored" { controller.setExternalTriggersActive(false) }
+        case "wifi": controller.setManual(true)
         case "offline":
             controller.simulateOffline(for: 3 * 60 + 9)
         default: break

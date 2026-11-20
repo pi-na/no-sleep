@@ -22,6 +22,7 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 - **Agent mode.** It stays awake while **Claude Code**, **Codex** or **T3 Code** threads are working, then goes back to normal when they're done, interrupted or crash.
 - **Thermal failsafe.** If your Mac runs hot for 20 minutes straight, No Sleep switches itself off. That's what you want when it's closed in a backpack.
 - **Offline failsafe.** Agents keeping your Mac up but the internet's been dead for 15 minutes (configurable)? No point staying awake, so it lets go. If the lid is closed, the Mac goes to sleep right then.
+- **Wi‑Fi fallback.** Pick a network your Mac already knows, like your iPhone's hotspot. If the internet drops for 30 seconds, No Sleep joins it. With Accessibility permission it picks your iPhone from the Wi‑Fi menu, which wakes the hotspot even when the iPhone is locked in your pocket and the lid is closed. Switch it on from the menu, choose the network in Settings.
 - **Go Dark.** One click dims the screen to black and mutes the sound. Any key or mouse move brings it back. It dims instead of sleeping the display, so macOS never locks the session and agents can keep clicking through dialogs overnight.
 - **Screen glow.** While your Mac is being kept awake, a faint amber glow sits along the bottom of every screen (full-screen apps too), so you know at a glance. Switch it off from the menu, or pick its color and opacity in Settings.
 - **Low-battery guard.** It also lets your Mac sleep once the battery gets low (10% by default).

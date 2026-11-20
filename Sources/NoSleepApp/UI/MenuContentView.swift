@@ -49,6 +49,11 @@ struct MenuContentView: View {
                 .padding(.vertical, 10)
 
             MenuDivider()
+            WiFiFallbackSection(fallback: controller.wifiFallback, openSettings: openSettings)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+
+            MenuDivider()
             FailsafeSection(controller: controller, openSettings: openSettings)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -507,6 +512,63 @@ private struct GlowSection: View {
                 .controlSize(.mini)
                 .labelsHidden()
                 .help("Show a faint glow along the bottom of the screen while your Mac is kept awake")
+        }
+    }
+}
+
+/// On/off for the Wi‑Fi fallback plus one line on what it's doing; the network is picked in Settings.
+@MainActor
+private struct WiFiFallbackSection: View {
+    @Bindable var fallback: WiFiFallback
+    let openSettings: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                SectionTitle("Wi‑Fi fallback")
+                Spacer()
+                Toggle("Wi‑Fi fallback", isOn: $fallback.enabled)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .labelsHidden()
+                    .help("Join a backup network (like your iPhone's hotspot) when the internet drops")
+            }
+            if let caption {
+                Button(action: openSettings) {
+                    Text(caption)
+                        .font(.system(size: 11))
+                        .foregroundStyle(captionIsWarning ? Color.orange : Color.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Change in Settings")
+            }
+        }
+    }
+
+    private var name: String { "“\(fallback.ssid ?? "")”" }
+
+    private var captionIsWarning: Bool {
+        switch fallback.status {
+        case .needsNetwork, .gaveUp: true
+        case .ready: !fallback.accessibilityTrusted
+        default: false
+        }
+    }
+
+    private var caption: String? {
+        switch fallback.status {
+        case .off: nil
+        case .needsNetwork: "Choose a backup network in Settings"
+        case .ready:
+            fallback.accessibilityTrusted
+                ? "If the internet drops, joins \(name)"
+                : "Joins \(name) only while it's broadcasting. Grant Accessibility in Settings to wake a locked iPhone."
+        case .connecting: "Joining \(name)…"
+        case .connected(let at): "Joined \(name) at \(at.formatted(date: .omitted, time: .shortened))"
+        case .retrying(let at): "Couldn't reach \(name). Trying again at \(at.formatted(date: .omitted, time: .shortened))"
+        case .gaveUp: "Couldn't reach \(name). Will try again when the network changes."
         }
     }
 }

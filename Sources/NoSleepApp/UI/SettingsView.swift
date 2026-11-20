@@ -14,6 +14,7 @@ struct SettingsView: View {
         Form {
             generalSection
             glowSection
+            wifiFallbackSection
             failsafeSection
             lidSection
             integrationsSection
@@ -26,6 +27,7 @@ struct SettingsView: View {
         .onAppear {
             integrations.refresh()
             controller.refresh()
+            controller.wifiFallback.refreshKnownNetworks()
             launchAtLogin = LoginItem.isEnabled
         }
     }
@@ -103,6 +105,49 @@ struct SettingsView: View {
             }
         } header: {
             Text("Screen glow")
+        }
+    }
+
+    // MARK: Wi‑Fi fallback
+
+    private var wifiFallbackSection: some View {
+        @Bindable var fallback = controller.wifiFallback
+        return Section {
+            Toggle(isOn: $fallback.enabled) {
+                Text("Join a backup network when the internet drops")
+                Text("After 30 seconds without internet, No Sleep joins the network you pick here. Made for your iPhone's hotspot: it reaches it even with the iPhone locked in your pocket and your Mac's lid closed. It tries 3 times, then waits for the network to change.")
+            }
+            Picker("Backup network", selection: $fallback.ssid) {
+                Text("None").tag(String?.none)
+                if let ssid = fallback.ssid, !fallback.knownNetworks.contains(ssid) {
+                    Text(ssid).tag(String?.some(ssid))
+                }
+                ForEach(fallback.knownNetworks, id: \.self) { Text($0).tag(String?.some($0)) }
+            }
+            LabeledContent("Accessibility permission") {
+                HStack(spacing: 8) {
+                    if fallback.accessibilityTrusted {
+                        Label("Granted", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Text("Not granted").foregroundStyle(.secondary)
+                        Button("Grant…") { fallback.requestAccessibility() }
+                    }
+                }
+            }
+            LabeledContent {
+                Button(fallback.isTesting ? "Testing…" : "Test now") { fallback.testNow() }
+                    .disabled(fallback.ssid == nil || fallback.isTesting)
+            } label: {
+                Text("Try it")
+                Text(fallback.testResult ?? "Joins the backup network now, even if the internet is up, and stays on it.")
+            }
+        } header: {
+            Text("Wi‑Fi fallback")
+        } footer: {
+            Text("Accessibility lets No Sleep pick your iPhone from the Wi‑Fi menu, which wakes its hotspot even while it's locked (Instant Hotspot). For that, use the same Apple Account on both, with Bluetooth and Wi‑Fi on. On the iPhone, under Personal Hotspot, turn on **Maximize Compatibility** (2.4 GHz connects more reliably) and **Allow Others to Join**. It only acts while your Mac is awake, so pair it with No Sleep to keep working with the lid closed.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 
