@@ -23,6 +23,7 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 - **Thermal failsafe.** If your Mac runs hot for 20 minutes straight, No Sleep switches itself off. That's what you want when it's closed in a backpack.
 - **Offline failsafe.** Agents keeping your Mac up but the internet's been dead for 15 minutes (configurable)? No point staying awake, so it lets go. If the lid is closed, the Mac goes to sleep right then.
 - **Go Dark.** One click dims the screen to black and mutes the sound. Any key or mouse move brings it back. It dims instead of sleeping the display, so macOS never locks the session and agents can keep clicking through dialogs overnight.
+- **Screen glow.** While your Mac is being kept awake, a faint amber glow sits along the bottom of every screen (full-screen apps too), so you know at a glance. Switch it off from the menu, or pick its color and opacity in Settings.
 - **Low-battery guard.** It also lets your Mac sleep once the battery gets low (10% by default).
 - **Updates itself.** It checks GitHub Releases, grabs the build for your macOS, makes sure it's signed by the same developer, swaps itself and restarts. No server, no nagging.
 - **Plays nice.** Quitting always gives your Mac its normal sleep back.

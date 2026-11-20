@@ -39,6 +39,11 @@ struct MenuContentView: View {
                 .padding(.vertical, 10)
 
             MenuDivider()
+            GlowSection(controller: controller)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+
+            MenuDivider()
             FailsafeSection(controller: controller, openSettings: openSettings)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -420,6 +425,26 @@ private struct LeaseRow: View {
             parts.append(minutes < 1 ? "just started" : "for \(DurationParser.shortLabel(TimeInterval(minutes * 60)))")
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+// MARK: - Screen glow
+
+/// On/off for the glow at the bottom of the screen; color and opacity live in Settings.
+@MainActor
+private struct GlowSection: View {
+    @Bindable var controller: SleepController
+
+    var body: some View {
+        HStack {
+            SectionTitle("Screen glow")
+            Spacer()
+            Toggle("Screen glow", isOn: $controller.glowEnabled)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .labelsHidden()
+                .help("Show a faint glow along the bottom of the screen while your Mac is kept awake")
+        }
     }
 }
 

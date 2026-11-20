@@ -30,6 +30,9 @@ final class SleepController {
         static let thermalFailsafeEnabled = "thermalFailsafeEnabled"
         static let offlineFailsafeEnabled = "offlineFailsafeEnabled"
         static let offlineFailsafeMinutes = "offlineFailsafeMinutes"
+        static let glowEnabled = "glowEnabled"
+        static let glowOpacity = "glowOpacity"
+        static let glowColor = "glowColor"
     }
 
     // MARK: State
@@ -106,6 +109,31 @@ final class SleepController {
         didSet { defaults.set(agentIdleTimeoutMinutes, forKey: NoSleepConstants.agentIdleTimeoutKey) }
     }
 
+    // MARK: Screen glow (see `AwakeGlow`)
+
+    static let defaultGlowColorHex = "#FFB000" // amber
+    static let defaultGlowOpacity = 0.35
+
+    /// Faint glow along the bottom of every screen while the Mac is kept awake.
+    var glowEnabled: Bool {
+        didSet { defaults.set(glowEnabled, forKey: Keys.glowEnabled) }
+    }
+
+    /// Opacity at the very bottom edge; it fades to nothing above that.
+    var glowOpacity: Double {
+        didSet { defaults.set(glowOpacity, forKey: Keys.glowOpacity) }
+    }
+
+    /// `#RRGGBB` in sRGB.
+    var glowColorHex: String {
+        didSet { defaults.set(glowColorHex, forKey: Keys.glowColor) }
+    }
+
+    var glowColor: NSColor {
+        get { NSColor(hex: glowColorHex) ?? NSColor(hex: Self.defaultGlowColorHex)! }
+        set { glowColorHex = newValue.hexString }
+    }
+
     private(set) var battery: BatteryState?
     private(set) var lidHelperInstalled = LidSleepControl.isHelperInstalled
     private(set) var lidSleepApplied = false
@@ -180,6 +208,9 @@ final class SleepController {
             Keys.thermalFailsafeEnabled: true,
             Keys.offlineFailsafeEnabled: true,
             Keys.offlineFailsafeMinutes: 15,
+            Keys.glowEnabled: true,
+            Keys.glowOpacity: Self.defaultGlowOpacity,
+            Keys.glowColor: Self.defaultGlowColorHex,
             NoSleepConstants.agentIdleTimeoutKey: NoSleepConstants.defaultAgentIdleTimeoutMinutes,
         ])
         manualEnabled = defaults.bool(forKey: Keys.manualEnabled)
@@ -193,6 +224,9 @@ final class SleepController {
         thermalFailsafeEnabled = defaults.bool(forKey: Keys.thermalFailsafeEnabled)
         offlineFailsafeEnabled = defaults.bool(forKey: Keys.offlineFailsafeEnabled)
         offlineFailsafeMinutes = max(1, defaults.integer(forKey: Keys.offlineFailsafeMinutes))
+        glowEnabled = defaults.bool(forKey: Keys.glowEnabled)
+        glowOpacity = min(1, max(0.05, defaults.double(forKey: Keys.glowOpacity)))
+        glowColorHex = defaults.string(forKey: Keys.glowColor) ?? Self.defaultGlowColorHex
         offlineWindow = SustainedCondition(limit: TimeInterval(offlineFailsafeMinutes * 60))
 
         // If we left `disablesleep 1` behind (crash, logout…), treat it as currently applied so the
@@ -463,5 +497,24 @@ final class SleepController {
             }
         }
         defaults.synchronize()
+    }
+}
+
+extension NSColor {
+    /// Parses `#RRGGBB` (the `#` is optional) as sRGB.
+    convenience init?(hex: String) {
+        let digits = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard digits.count == 6, let value = UInt32(digits, radix: 16) else { return nil }
+        self.init(srgbRed: CGFloat((value >> 16) & 0xFF) / 255,
+                  green: CGFloat((value >> 8) & 0xFF) / 255,
+                  blue: CGFloat(value & 0xFF) / 255,
+                  alpha: 1)
+    }
+
+    /// `#RRGGBB` in sRGB, ignoring alpha.
+    var hexString: String {
+        let color = usingColorSpace(.sRGB) ?? self
+        func byte(_ component: CGFloat) -> Int { Int((min(1, max(0, component)) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", byte(color.redComponent), byte(color.greenComponent), byte(color.blueComponent))
     }
 }
