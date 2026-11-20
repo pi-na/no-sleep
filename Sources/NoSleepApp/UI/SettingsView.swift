@@ -182,6 +182,10 @@ struct SettingsView: View {
 
     private var integrationsSection: some View {
         Section {
+            Toggle(isOn: $controller.externalTriggersEnabled) {
+                Text("Allow external triggers")
+                Text("Lets Claude Code, Codex, T3 Code and the `nosleep` CLI keep your Mac awake. The menu's switch only ignores the tasks running now.")
+            }
             LabeledContent {
                 if integrations.allAgentsInstalled {
                     HStack(spacing: 8) {

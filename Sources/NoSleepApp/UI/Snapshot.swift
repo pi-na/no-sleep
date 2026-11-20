@@ -14,15 +14,24 @@ enum Snapshot {
         integrations.refresh()
 
         let scenario = ProcessInfo.processInfo.environment["NOSLEEP_SNAPSHOT_STATE"] ?? "off"
+        controller.setManual(false) // start clean: the previous snapshot run left its state in defaults
         switch scenario {
-        case "on": controller.setEnabled(true)
+        case "on": controller.setManual(true)
         case "timer": controller.startTimer(duration: 5025)
         case "hot":
-            controller.setEnabled(true)
+            controller.setManual(true)
             controller.simulateThermal(level: .serious, hotFor: 6 * 60 + 12)
         case "tripped":
-            controller.setEnabled(true)
+            controller.setManual(true)
             controller.simulateThermal(level: .critical, hotFor: ThermalFailsafe.defaultLimit + 1)
+        case "agent", "both", "ignored":
+            controller.leaseOverride = [
+                Lease(id: "snapshot-t3", source: "claude", label: "T3 Code · Claude Code", detail: "no-sleep",
+                      createdAt: Date().addingTimeInterval(-12 * 60)),
+            ]
+            controller.refresh()
+            if scenario == "both" { controller.setManual(true) }
+            if scenario == "ignored" { controller.setExternalTriggersActive(false) }
         case "offline":
             controller.simulateOffline(for: 3 * 60 + 9)
         default: break

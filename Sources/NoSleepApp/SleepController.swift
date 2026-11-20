@@ -155,6 +155,8 @@ final class SleepController {
 
     /// Snapshot/debug only: pretend to be at this thermal level.
     var thermalOverride: ThermalLevel?
+    /// Snapshot/debug only: pretend these leases are on disk.
+    var leaseOverride: [Lease]?
 
     // MARK: Derived
 
@@ -165,10 +167,13 @@ final class SleepController {
         return leases.filter { !dismissedLeaseIDs.contains($0.id) && !(offlineLockout && $0.isAgent) }
     }
 
+    /// External triggers are keeping the Mac awake right now (drives the external-triggers toggle).
+    var externalHoldingAwake: Bool { !activeLeases.isEmpty }
+
     /// An LLM agent (Claude Code / Codex / T3 Code) is currently holding the Mac awake.
     var agentsHoldingAwake: Bool { activeLeases.contains(where: \.isAgent) }
 
-    /// What the user asked for (drives the toggle).
+    /// Some reason wants the Mac awake: manual toggle, timer or external triggers.
     var wantsAwake: Bool { manualEnabled || timerActive || !activeLeases.isEmpty }
 
     var pausedForBattery: Bool {
@@ -270,15 +275,24 @@ final class SleepController {
 
     // MARK: User actions
 
-    func setEnabled(_ enabled: Bool) {
+    /// The "Enable manually" toggle. Independent of external triggers: it never touches leases.
+    func setManual(_ enabled: Bool) {
         clearThermalTrip()
         timerEnd = nil
         manualEnabled = enabled
-        if !enabled {
-            // "Off" means off now: ignore agents currently holding leases until they finish.
+        update(userInitiated: enabled)
+    }
+
+    /// The menu's external-triggers toggle. Off ignores the leases holding the Mac awake right now
+    /// (each one until it goes away); on takes them back. Never touches the manual toggle or timer.
+    func setExternalTriggersActive(_ active: Bool) {
+        if active {
+            clearThermalTrip()
+            dismissedLeaseIDs.removeAll()
+        } else {
             dismissedLeaseIDs.formUnion(leases.map(\.id))
         }
-        update(userInitiated: enabled)
+        update(userInitiated: active)
     }
 
     func startTimer(until end: Date) {
@@ -307,7 +321,7 @@ final class SleepController {
     // MARK: Refresh / apply
 
     func refresh() {
-        leases = leaseStore.pruneAndList()
+        leases = leaseOverride ?? leaseStore.pruneAndList()
         dismissedLeaseIDs.formIntersection(leases.map(\.id))
         battery = BatteryState.current()
         lidHelperInstalled = LidSleepControl.isHelperInstalled

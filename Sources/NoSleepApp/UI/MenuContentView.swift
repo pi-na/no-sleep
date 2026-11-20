@@ -29,6 +29,11 @@ struct MenuContentView: View {
             }
 
             MenuDivider()
+            ManualSection(controller: controller)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+
+            MenuDivider()
             TimerSection(controller: controller)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -76,25 +81,19 @@ private struct HeaderSection: View {
     @Bindable var controller: SleepController
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                (Text("No Sleep ") + Text(controller.wantsAwake ? "ENABLED" : "DISABLED")
-                    .foregroundColor(controller.wantsAwake ? .red : .secondary).fontWeight(.heavy))
-                    .font(.system(size: 13, weight: .semibold))
-                Text(subtitle)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-            Toggle("No Sleep", isOn: Binding(
-                get: { controller.wantsAwake },
-                set: { controller.setEnabled($0) }
-            ))
-            .toggleStyle(.switch)
-            .labelsHidden()
-            .accessibilityLabel("Prevent sleep")
+        VStack(alignment: .leading, spacing: 3) {
+            (Text("No Sleep ") + Text(controller.wantsAwake ? "ENABLED" : "DISABLED")
+                .foregroundColor(controller.wantsAwake ? .red : .secondary).fontWeight(.heavy))
+                .font(.system(size: 13, weight: .semibold))
+            Text(subtitle)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // The switches animate their change; without this the title cross-fades between
+        // "ENABLED" and "DISABLED" and both words show on top of each other for a moment.
+        .transaction { $0.animation = nil }
     }
 
     private var subtitle: String {
@@ -152,13 +151,32 @@ private struct StatusSection: View {
                 .buttonStyle(.plain)
                 .help("Cancel timer")
             }
-        } else if controller.manualEnabled {
-            StatusRow(systemImage: "infinity", tint: .red, text: "Until you turn it off")
-        } else if !controller.activeLeases.isEmpty {
-            let count = controller.activeLeases.count
-            StatusRow(systemImage: "bolt.fill", tint: .red,
-                      text: count == 1 ? "While \(controller.activeLeases[0].displayTitle) is working"
-                                       : "While \(count) external tasks are running")
+        }
+        if !reasons.isEmpty {
+            StatusRow(systemImage: reasonSymbol, tint: .red, text: "Enabled by " + reasons.joined(separator: " + "))
+        }
+    }
+
+    /// Who is keeping the Mac awake, in plain words ("Manual toggle", "External trigger: T3 Code").
+    private var reasons: [String] {
+        var parts: [String] = []
+        if controller.manualEnabled { parts.append("Manual toggle") }
+        if controller.timerActive { parts.append("Timer") }
+        let leases = controller.activeLeases
+        if leases.count == 1 {
+            parts.append("External trigger: \(leases[0].shortTitle)")
+        } else if leases.count > 1 {
+            parts.append("\(leases.count) external triggers")
+        }
+        return parts
+    }
+
+    private var reasonSymbol: String {
+        switch (controller.manualEnabled, controller.timerActive, controller.externalHoldingAwake) {
+        case (true, false, false): return "hand.tap.fill"
+        case (false, true, false): return "timer"
+        case (false, false, true): return "bolt.fill"
+        default: return "checkmark.circle.fill"
         }
     }
 
@@ -231,6 +249,33 @@ private struct StatusRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
+        }
+    }
+}
+
+// MARK: - Manual
+
+@MainActor
+private struct ManualSection: View {
+    let controller: SleepController
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Enable manually")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("No Sleep is ON until you disable this toggle.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Toggle("Enable manually", isOn: Binding(
+                get: { controller.manualEnabled },
+                set: { controller.setManual($0) }
+            ))
+            .toggleStyle(.switch)
+            .labelsHidden()
         }
     }
 }
@@ -314,17 +359,27 @@ private struct ExternalSection: View {
             HStack {
                 SectionTitle("External triggers")
                 Spacer()
-                Toggle("External triggers", isOn: $controller.externalTriggersEnabled)
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .labelsHidden()
-                    .help("Let Claude Code, Codex, T3 Code and the nosleep CLI keep your Mac awake")
+                Toggle("External triggers", isOn: Binding(
+                    get: { controller.externalHoldingAwake },
+                    set: { controller.setExternalTriggersActive($0) }
+                ))
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .labelsHidden()
+                .disabled(!controller.externalTriggersEnabled || controller.leases.isEmpty)
+                .help(toggleHelp)
             }
 
             if !controller.externalTriggersEnabled {
-                Text("Agents and scripts can't keep your Mac awake.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                HStack(alignment: .center, spacing: 8) {
+                    Text("Turned off in Settings: agents and scripts can't keep your Mac awake.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Button("Settings…", action: openSettings)
+                        .controlSize(.small)
+                }
             } else if controller.leases.isEmpty {
                 emptyState
             } else {
@@ -342,6 +397,14 @@ private struct ExternalSection: View {
                 }
             }
         }
+    }
+
+    private var toggleHelp: String {
+        if !controller.externalTriggersEnabled { return "External triggers are turned off in Settings" }
+        if controller.leases.isEmpty { return "Turns on by itself while an agent or script is working" }
+        return controller.externalHoldingAwake
+            ? "Ignore the running tasks until they finish (the manual toggle is not affected)"
+            : "Let the running tasks keep your Mac awake again"
     }
 
     @ViewBuilder
@@ -445,6 +508,13 @@ private struct GlowSection: View {
                 .labelsHidden()
                 .help("Show a faint glow along the bottom of the screen while your Mac is kept awake")
         }
+    }
+}
+
+private extension Lease {
+    /// "T3 Code · Claude Code" → "T3 Code": enough to say where the trigger comes from.
+    var shortTitle: String {
+        displayTitle.components(separatedBy: " · ").first ?? displayTitle
     }
 }
 
