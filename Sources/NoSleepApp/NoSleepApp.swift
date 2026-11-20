@@ -32,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settingsWindow = SettingsWindowController()
     private var quittingFromMenu = false
     private let goDarkSession = GoDarkSession()
+    private lazy var awakeGlow = AwakeGlow(controller: controller)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if Snapshot.runIfRequested(controller: controller, integrations: integrations) {
@@ -50,12 +51,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         LoginItem.restoreIfNeeded()
         integrations.refresh()
         controller.start()
+        awakeGlow.start()
         updater.willRelaunch = { [weak self] in self?.relaunchingForUpdate = true }
         updater.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         goDarkSession.end() // Never leave the screen black behind us (quit, update relaunch).
+        awakeGlow.stop()
         controller.shutdown(forget: quittingFromMenu, keepLidState: relaunchingForUpdate)
         try? FileManager.default.removeItem(at: NoSleepPaths.appPIDFile)
     }

@@ -13,6 +13,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             generalSection
+            glowSection
             failsafeSection
             lidSection
             integrationsSection
@@ -64,6 +65,44 @@ struct SettingsView: View {
             }
         } header: {
             Text("General")
+        }
+    }
+
+    // MARK: Screen glow
+
+    private var glowSection: some View {
+        Section {
+            Toggle(isOn: $controller.glowEnabled) {
+                Text("Glow at the bottom of the screen")
+                Text("A faint band of color along the bottom edge of every display while your Mac is being kept awake.")
+            }
+            if controller.glowEnabled {
+                LabeledContent("Color") {
+                    HStack(spacing: 8) {
+                        if controller.glowColorHex != SleepController.defaultGlowColorHex {
+                            Button("Reset to Amber") { controller.glowColorHex = SleepController.defaultGlowColorHex }
+                        }
+                        ColorPicker("Color", selection: Binding(
+                            get: { Color(nsColor: controller.glowColor) },
+                            set: { controller.glowColor = NSColor($0) }
+                        ), supportsOpacity: false)
+                        .labelsHidden()
+                    }
+                }
+                LabeledContent("Opacity") {
+                    HStack(spacing: 8) {
+                        Slider(value: $controller.glowOpacity, in: 0.05...1)
+                            .frame(width: 180)
+                        Text("\(Int((controller.glowOpacity * 100).rounded()))%")
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .frame(width: 40, alignment: .trailing)
+                    }
+                }
+                GlowPreview(color: controller.glowColor, opacity: controller.glowOpacity)
+            }
+        } header: {
+            Text("Screen glow")
         }
     }
 
@@ -397,5 +436,31 @@ final class SettingsWindowController {
         }
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
+    }
+}
+
+/// What the glow looks like at the bottom of a screen, so it can be tuned while the Mac isn't awake.
+private struct GlowPreview: View {
+    let color: NSColor
+    let opacity: Double
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(Color(nsColor: .textBackgroundColor))
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(nsColor: color).opacity(opacity), location: 0),
+                        .init(color: Color(nsColor: color).opacity(opacity * 0.4), location: 0.35),
+                        .init(color: Color(nsColor: color).opacity(0), location: 1),
+                    ],
+                    startPoint: .bottom, endPoint: .top
+                )
+                .frame(height: AwakeGlow.height)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.primary.opacity(0.1)))
+            .frame(height: 64)
+            .accessibilityLabel("Glow preview")
     }
 }
