@@ -266,5 +266,68 @@ test("asset picking") {
     check(release.assets.first?.sha256 == "abcd", "digest parsed")
 }
 
+
+// MARK: Wi-Fi fallback
+
+test("wifi fallback policy") {
+    let t0 = Date(timeIntervalSince1970: 1_000_000)
+    func at(_ s: TimeInterval) -> Date { t0.addingTimeInterval(s) }
+    var p = WiFiFallbackPolicy()
+    check(p.observe(enabled: false, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(0)) == nil, "disabled")
+    check(p.observe(enabled: true, configured: false, wifiPowered: true, internet: .offline, network: nil, now: at(100)) == nil, "unconfigured")
+
+    p = WiFiFallbackPolicy()
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: "cafe", now: at(0)) == nil, "offline starts the clock")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: "cafe", now: at(29)) == nil, "29 s: not yet")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: "cafe", now: at(30)) == 1, "30 s: cycle 1")
+    check(p.phase == .attempting(cycle: 1), "attempting 1")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(40)) == nil, "no overlap while attempting")
+    p.attemptFinished(success: false, now: at(100))
+    check(p.phase == .waiting(cycle: 1, until: at(160)), "wait 60 s")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(159)) == nil, "still waiting")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(160)) == 2, "cycle 2")
+    p.attemptFinished(success: false, now: at(200))
+    check(p.phase == .waiting(cycle: 2, until: at(380)), "wait 180 s")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(380)) == 3, "cycle 3")
+    p.attemptFinished(success: false, now: at(420))
+    check(p.phase == .gaveUp, "gave up after 3")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(2000)) == nil, "stays given up")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: "home", now: at(2010)) == nil, "network change re-arms (clock starts)")
+    check(p.phase == .idle, "idle after network change")
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: "home", now: at(2040)) == 1, "re-armed: cycle 1")
+    p.attemptFinished(success: true, now: at(2050))
+    check(p.phase == .idle, "success → idle")
+
+    p = WiFiFallbackPolicy()
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(0))
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(30))
+    p.attemptFinished(success: false, now: at(60))
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .online, network: nil, now: at(70)) == nil && p.phase == .idle, "online during wait → idle")
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(80))
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(110))
+    p.attemptFinished(success: false, now: at(120))
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(180))
+    p.attemptFinished(success: false, now: at(190))
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(370))
+    p.attemptFinished(success: false, now: at(380))
+    check(p.phase == .gaveUp, "gave up again")
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .online, network: nil, now: at(400))
+    check(p.phase == .idle, "online clears give-up")
+
+    p = WiFiFallbackPolicy()
+    check(p.observe(enabled: true, configured: true, wifiPowered: true, internet: .captivePortal, network: "hotel", now: at(0)) == nil
+        && p.observe(enabled: true, configured: true, wifiPowered: true, internet: .captivePortal, network: "hotel", now: at(60)) == nil, "captive portal never triggers")
+    check(p.observe(enabled: true, configured: true, wifiPowered: false, internet: .offline, network: nil, now: at(70)) == nil
+        && p.observe(enabled: true, configured: true, wifiPowered: false, internet: .offline, network: nil, now: at(200)) == nil, "Wi-Fi off never triggers")
+
+    p = WiFiFallbackPolicy()
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(0))
+    _ = p.observe(enabled: true, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(30))
+    _ = p.observe(enabled: false, configured: true, wifiPowered: true, internet: .offline, network: nil, now: at(35))
+    check(p.phase == .idle, "toggle off mid-attempt → idle")
+    p.attemptFinished(success: false, now: at(40))
+    check(p.phase == .idle, "late result ignored")
+}
+
 print(failures == 0 ? "All \(checks) checks passed." : "\(failures) of \(checks) checks failed.")
 exit(failures == 0 ? 0 : 1)
