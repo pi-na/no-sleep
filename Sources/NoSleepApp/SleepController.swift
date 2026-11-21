@@ -430,7 +430,7 @@ final class SleepController {
             lidRequested = nil
             lidHelperInstalled = LidSleepControl.isHelperInstalled
             lidIssue = lidHelperInstalled
-                ? .failed("Couldn't change the sleep setting (pmset failed).")
+                ? .failed(String(localized: "Couldn't change the sleep setting (pmset failed)."))
                 : .needsSetup
         }
     }

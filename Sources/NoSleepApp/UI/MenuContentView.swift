@@ -87,7 +87,7 @@ private struct HeaderSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            (Text("No Sleep ") + Text(controller.wantsAwake ? "ENABLED" : "DISABLED")
+            (Text(verbatim: "No Sleep ") + Text(controller.wantsAwake ? LocalizedStringKey("ENABLED") : LocalizedStringKey("DISABLED"))
                 .foregroundColor(controller.wantsAwake ? .red : .secondary).fontWeight(.heavy))
                 .font(.system(size: 13, weight: .semibold))
             Text(subtitle)
@@ -103,15 +103,15 @@ private struct HeaderSection: View {
 
     private var subtitle: String {
         if !controller.wantsAwake {
-            return "Your Mac sleeps normally when closed or idle."
+            return String(localized: "Your Mac sleeps normally when closed or idle.")
         }
         if controller.pausedForBattery {
-            return "Paused while the battery is low. Your Mac can sleep."
+            return String(localized: "Paused while the battery is low. Your Mac can sleep.")
         }
         if controller.coversLidClose {
-            return "Mac will not go to sleep when closed or idle."
+            return String(localized: "Mac will not go to sleep when closed or idle.")
         }
-        return "Mac will not go to sleep when idle. Closing the lid still puts it to sleep."
+        return String(localized: "Mac will not go to sleep when idle. Closing the lid still puts it to sleep.")
     }
 }
 
@@ -131,7 +131,7 @@ private struct StatusSection: View {
             }
             if controller.pausedForBattery, let battery = controller.battery {
                 StatusRow(systemImage: "battery.25", tint: .orange,
-                          text: "Battery at \(battery.percentage)% — sleep allowed")
+                          text: String(localized: "Battery at \(battery.percentage)% — sleep allowed"))
             }
             if let issue = controller.lidIssue, controller.preventLidSleep {
                 lidIssueRow(issue)
@@ -145,8 +145,8 @@ private struct StatusSection: View {
             HStack(spacing: 6) {
                 StatusRow(
                     systemImage: "timer", tint: .red,
-                    text: "Turns off in \(DurationParser.countdown(end.timeIntervalSince(now)))",
-                    trailing: "at \(end.formatted(date: .omitted, time: .shortened))"
+                    text: String(localized: "Turns off in \(DurationParser.countdown(end.timeIntervalSince(now)))"),
+                    trailing: String(localized: "at \(end.formatted(date: .omitted, time: .shortened))")
                 )
                 Button {
                     controller.cancelTimer()
@@ -158,20 +158,20 @@ private struct StatusSection: View {
             }
         }
         if !reasons.isEmpty {
-            StatusRow(systemImage: reasonSymbol, tint: .red, text: "Enabled by " + reasons.joined(separator: " + "))
+            StatusRow(systemImage: reasonSymbol, tint: .red, text: String(localized: "Enabled by \(reasons.joined(separator: " + "))"))
         }
     }
 
     /// Who is keeping the Mac awake, in plain words ("Manual toggle", "External trigger: T3 Code").
     private var reasons: [String] {
         var parts: [String] = []
-        if controller.manualEnabled { parts.append("Manual toggle") }
-        if controller.timerActive { parts.append("Timer") }
+        if controller.manualEnabled { parts.append(String(localized: "Manual toggle")) }
+        if controller.timerActive { parts.append(String(localized: "Timer")) }
         let leases = controller.activeLeases
         if leases.count == 1 {
-            parts.append("External trigger: \(leases[0].shortTitle)")
+            parts.append(String(localized: "External trigger: \(leases[0].shortTitle)"))
         } else if leases.count > 1 {
-            parts.append("\(leases.count) external triggers")
+            parts.append(String(localized: "\(leases.count) external triggers"))
         }
         return parts
     }
@@ -190,17 +190,17 @@ private struct StatusSection: View {
     private func failsafeRows(now: Date) -> some View {
         if let tripped = controller.thermalTrippedAt {
             StatusRow(systemImage: "thermometer.high", tint: .orange,
-                      text: "Too hot — turned off at \(tripped.formatted(date: .omitted, time: .shortened))")
+                      text: String(localized: "Too hot — turned off at \(tripped.formatted(date: .omitted, time: .shortened))"))
         } else if controller.thermalFailsafeEnabled, let remaining = controller.thermalFailsafe.remaining(now: now) {
             StatusRow(systemImage: "thermometer.high", tint: .orange,
-                      text: "Running hot · turns off in \(DurationParser.countdown(remaining))")
+                      text: String(localized: "Running hot · turns off in \(DurationParser.countdown(remaining))"))
         }
         if let tripped = controller.offlineTrippedAt {
             StatusRow(systemImage: "wifi.slash", tint: .orange,
-                      text: "Offline — agents released at \(tripped.formatted(date: .omitted, time: .shortened))")
+                      text: String(localized: "Offline — agents released at \(tripped.formatted(date: .omitted, time: .shortened))"))
         } else if controller.offlineFailsafeEnabled, let remaining = controller.offlineWindow.remaining(now: now) {
             StatusRow(systemImage: "wifi.exclamationmark", tint: .orange,
-                      text: "Offline · releasing agents in \(DurationParser.countdown(remaining))")
+                      text: String(localized: "Offline · releasing agents in \(DurationParser.countdown(remaining))"))
         }
     }
 
@@ -222,7 +222,7 @@ private struct StatusSection: View {
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            Button(controller.isSettingUpLidHelper ? "Waiting…" : "Set Up…") {
+            Button(controller.isSettingUpLidHelper ? LocalizedStringKey("Waiting…") : LocalizedStringKey("Set Up…")) {
                 controller.setUpLidHelper()
             }
             .controlSize(.small)
@@ -405,11 +405,11 @@ private struct ExternalSection: View {
     }
 
     private var toggleHelp: String {
-        if !controller.externalTriggersEnabled { return "External triggers are turned off in Settings" }
-        if controller.leases.isEmpty { return "Turns on by itself while an agent or script is working" }
+        if !controller.externalTriggersEnabled { return String(localized: "External triggers are turned off in Settings") }
+        if controller.leases.isEmpty { return String(localized: "Turns on by itself while an agent or script is working") }
         return controller.externalHoldingAwake
-            ? "Ignore the running tasks until they finish (the manual toggle is not affected)"
-            : "Let the running tasks keep your Mac awake again"
+            ? String(localized: "Ignore the running tasks until they finish (the manual toggle is not affected)")
+            : String(localized: "Let the running tasks keep your Mac awake again")
     }
 
     @ViewBuilder
@@ -449,7 +449,7 @@ private struct LeaseRow: View {
                 .frame(width: 22, height: 22)
                 .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
             VStack(alignment: .leading, spacing: 1) {
-                Text(lease.displayTitle)
+                Text(lease.localizedTitle)
                     .font(.system(size: 12, weight: .medium))
                     .lineLimit(1)
                 Text(subtitle)
@@ -487,10 +487,11 @@ private struct LeaseRow: View {
         var parts: [String] = []
         if let detail = lease.detail { parts.append(detail) }
         if dismissed {
-            parts.append("ignored")
+            parts.append(String(localized: "ignored"))
         } else {
             let minutes = Int(now.timeIntervalSince(lease.createdAt) / 60)
-            parts.append(minutes < 1 ? "just started" : "for \(DurationParser.shortLabel(TimeInterval(minutes * 60)))")
+            parts.append(minutes < 1 ? String(localized: "just started")
+                                      : String(localized: "for \(DurationParser.shortLabel(TimeInterval(minutes * 60)))"))
         }
         return parts.joined(separator: " · ")
     }
@@ -560,15 +561,15 @@ private struct WiFiFallbackSection: View {
     private var caption: String? {
         switch fallback.status {
         case .off: nil
-        case .needsNetwork: "Choose a backup network in Settings"
+        case .needsNetwork: String(localized: "Choose a backup network in Settings")
         case .ready:
             fallback.accessibilityTrusted
-                ? "If the internet drops, joins \(name)"
-                : "Joins \(name) only while it's broadcasting. Grant Accessibility in Settings to wake a locked iPhone."
-        case .connecting: "Joining \(name)…"
-        case .connected(let at): "Joined \(name) at \(at.formatted(date: .omitted, time: .shortened))"
-        case .retrying(let at): "Couldn't reach \(name). Trying again at \(at.formatted(date: .omitted, time: .shortened))"
-        case .gaveUp: "Couldn't reach \(name). Will try again when the network changes."
+                ? String(localized: "If the internet drops, joins \(name)")
+                : String(localized: "Joins \(name) only while it's broadcasting. Grant Accessibility in Settings to wake a locked iPhone.")
+        case .connecting: String(localized: "Joining \(name)…")
+        case .connected(let at): String(localized: "Joined \(name) at \(at.formatted(date: .omitted, time: .shortened))")
+        case .retrying(let at): String(localized: "Couldn't reach \(name). Trying again at \(at.formatted(date: .omitted, time: .shortened))")
+        case .gaveUp: String(localized: "Couldn't reach \(name). Will try again when the network changes.")
         }
     }
 }
@@ -576,7 +577,7 @@ private struct WiFiFallbackSection: View {
 private extension Lease {
     /// "T3 Code · Claude Code" → "T3 Code": enough to say where the trigger comes from.
     var shortTitle: String {
-        displayTitle.components(separatedBy: " · ").first ?? displayTitle
+        localizedTitle.components(separatedBy: " · ").first ?? localizedTitle
     }
 }
 
@@ -595,12 +596,12 @@ private struct FailsafeSection: View {
         }
     }
 
-    private func row(_ title: String, enabled: Bool) -> some View {
+    private func row(_ title: LocalizedStringKey, enabled: Bool) -> some View {
         Button(action: openSettings) {
             HStack {
                 SectionTitle(title)
                 Spacer()
-                Text(enabled ? "Enabled" : "Disabled")
+                Text(enabled ? LocalizedStringKey("Enabled") : LocalizedStringKey("Disabled"))
                     .font(.system(size: 11, weight: enabled ? .bold : .medium))
                     .foregroundStyle(enabled ? Color.red : Color.secondary)
             }
@@ -615,8 +616,8 @@ private struct FailsafeSection: View {
 
 @MainActor
 struct SectionTitle: View {
-    let title: String
-    init(_ title: String) { self.title = title }
+    let title: LocalizedStringKey
+    init(_ title: LocalizedStringKey) { self.title = title }
 
     var body: some View {
         Text(title)
@@ -675,8 +676,8 @@ struct MenuDivider: View {
 /// A full-width, menu-item-like row with hover highlight.
 @MainActor
 struct MenuActionRow: View {
-    let title: String
-    var subtitle: String?
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey?
     var shortcut: String?
     let action: () -> Void
     @State private var hovering = false
@@ -692,7 +693,7 @@ struct MenuActionRow: View {
                 }
                 Spacer()
                 if let shortcut {
-                    Text(shortcut).foregroundStyle(hovering ? Color.white.opacity(0.8) : Color.secondary)
+                    Text(verbatim: shortcut).foregroundStyle(hovering ? Color.white.opacity(0.8) : Color.secondary)
                 }
             }
             .font(.system(size: 13))

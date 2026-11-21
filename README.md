@@ -27,6 +27,7 @@ It's 100% SwiftUI + AppKit with zero dependencies, and it's under 1 MB.
 - **Screen glow.** While your Mac is being kept awake, a faint amber glow sits along the bottom of every screen (full-screen apps too), so you know at a glance. Switch it off from the menu, or pick its color and opacity in Settings.
 - **Low-battery guard.** It also lets your Mac sleep once the battery gets low (10% by default).
 - **Updates itself.** It checks GitHub Releases, grabs the build for your macOS, makes sure it's signed by the same developer, swaps itself and restarts. No server, no nagging.
+- **English and Spanish.** The app follows your Mac's language: Spanish (Spain) if it's set to Spanish, English otherwise.
 - **Plays nice.** Quitting always gives your Mac its normal sleep back.
 
 ## Installation - Releases

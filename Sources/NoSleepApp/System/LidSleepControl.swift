@@ -16,8 +16,8 @@ enum LidSleepControl {
 
         var errorDescription: String? {
             switch self {
-            case .cancelled: return "Setup was cancelled."
-            case .unsupportedUserName: return "Your user name contains characters No Sleep can't safely write to sudoers."
+            case .cancelled: return String(localized: "Setup was cancelled.")
+            case .unsupportedUserName: return String(localized: "Your user name contains characters No Sleep can't safely write to sudoers.")
             case .failed(let message): return message
             }
         }
@@ -91,13 +91,13 @@ enum LidSleepControl {
         if let apply {
             script += "\n\(pmsetPath) -a disablesleep \(apply ? 1 : 0)"
         }
-        try runAsAdmin(script, prompt: "No Sleep needs permission to keep your Mac awake when the lid is closed. You'll only be asked once.")
+        try runAsAdmin(script, prompt: String(localized: "No Sleep needs permission to keep your Mac awake when the lid is closed. You'll only be asked once."))
     }
 
     static func uninstallHelper() throws {
         try runAsAdmin(
             "/bin/rm -f \(sudoersPath); \(pmsetPath) -a disablesleep 0",
-            prompt: "No Sleep wants to remove its permission to change sleep settings."
+            prompt: String(localized: "No Sleep wants to remove its permission to change sleep settings.")
         )
     }
 

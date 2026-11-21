@@ -99,7 +99,7 @@ final class WiFiFallback {
     func testNow() {
         guard let ssid, !isTesting else { return }
         isTesting = true
-        testResult = "Joining “\(ssid)”…"
+        testResult = String(localized: "Joining “\(ssid)”…")
         Task.detached {
             _ = await Self.runCycle(ssid: ssid)
             // The cycle stops as soon as there's internet, which during a test may still be the old
@@ -113,9 +113,9 @@ final class WiFiFallback {
             await MainActor.run {
                 self.isTesting = false
                 self.testResult = switch (onBackup, online) {
-                case (true, true): "Works: joined “\(ssid)” and the internet is up."
-                case (true, false): "Joined “\(ssid)”, but it has no internet."
-                default: "Couldn't join “\(ssid)”. Check the tips below."
+                case (true, true): String(localized: "Works: joined “\(ssid)” and the internet is up.")
+                case (true, false): String(localized: "Joined “\(ssid)”, but it has no internet.")
+                default: String(localized: "Couldn't join “\(ssid)”. Check the tips below.")
                 }
             }
         }
