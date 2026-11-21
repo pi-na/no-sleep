@@ -1,0 +1,3 @@
+/* No Sleep — English.
+   The keys are the English text in the source code, so this file stays empty: it only tells macOS
+   that English is a supported language. Translations live in the other *.lproj folders. */

@@ -40,6 +40,8 @@ lipo -create $(printf '%s/NoSleepApp ' "${BINS[@]}") -output "$CONTENTS/MacOS/No
 lipo -create $(printf '%s/nosleep ' "${BINS[@]}") -output "$CONTENTS/Helpers/nosleep"
 cp Resources/Info.plist "$CONTENTS/Info.plist"
 plutil -replace LSMinimumSystemVersion -string "$MIN_MACOS" "$CONTENTS/Info.plist"
+# Translations: macOS picks the language from the system preferences (English is the fallback).
+cp -R Resources/*.lproj "$CONTENTS/Resources/"
 
 echo "▸ Rendering icon"
 ICONSET=$(mktemp -d)/AppIcon.iconset

@@ -6,7 +6,7 @@ enum MenuBarIcon {
     /// Mac may sleep: "z z z".
     static let sleepy: NSImage = {
         let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
-        let image = NSImage(systemSymbolName: "zzz", accessibilityDescription: "No Sleep: off")?
+        let image = NSImage(systemSymbolName: "zzz", accessibilityDescription: String(localized: "No Sleep: off"))?
             .withSymbolConfiguration(configuration) ?? NSImage()
         image.isTemplate = true
         return image
@@ -36,7 +36,7 @@ enum MenuBarIcon {
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = "No Sleep: on"
+        image.accessibilityDescription = String(localized: "No Sleep: on")
         return image
     }()
 }
@@ -46,6 +46,6 @@ struct MenuBarLabel: View {
 
     var body: some View {
         Image(nsImage: controller.isActive ? MenuBarIcon.awake : MenuBarIcon.sleepy)
-            .accessibilityLabel(controller.isActive ? "No Sleep is on" : "No Sleep is off")
+            .accessibilityLabel(controller.isActive ? LocalizedStringKey("No Sleep is on") : LocalizedStringKey("No Sleep is off"))
     }
 }

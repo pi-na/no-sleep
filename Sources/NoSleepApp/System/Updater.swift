@@ -196,7 +196,7 @@ final class Updater {
         do {
             try process.run()
         } catch {
-            state = .failed("Installed, but couldn't relaunch. Open No Sleep again.")
+            state = .failed(String(localized: "Installed, but couldn't relaunch. Open No Sleep again."))
             return
         }
         willRelaunch?()
@@ -212,7 +212,7 @@ final class Updater {
 
 struct UpdateError: LocalizedError {
     let message: String
-    init(_ message: String) { self.message = message }
+    init(_ message: String.LocalizationValue) { self.message = String(localized: message) }
     var errorDescription: String? { message }
 }
 
@@ -251,7 +251,7 @@ enum UpdateInstaller {
     }
 
     @discardableResult
-    static func run(_ path: String, _ arguments: [String], failure: String) throws -> String {
+    static func run(_ path: String, _ arguments: [String], failure: String.LocalizationValue) throws -> String {
         let result = LidSleepControl.run(path, arguments)
         guard result.status == 0 else { throw UpdateError(failure) }
         return result.output

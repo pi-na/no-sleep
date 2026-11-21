@@ -1,0 +1,218 @@
+/* No Sleep — español (España).
+   Las claves son el texto en inglés del código. Marcadores: %@ texto, %lld número, %% un signo %. */
+
+/* Menu: header */
+"ENABLED" = "ACTIVADO";
+"DISABLED" = "DESACTIVADO";
+"Your Mac sleeps normally when closed or idle." = "Tu Mac entra en reposo con normalidad al cerrarlo o al quedar inactivo.";
+"Paused while the battery is low. Your Mac can sleep." = "En pausa por batería baja. Tu Mac puede entrar en reposo.";
+"Mac will not go to sleep when closed or idle." = "El Mac no entrará en reposo al cerrarlo ni al quedar inactivo.";
+"Mac will not go to sleep when idle. Closing the lid still puts it to sleep." = "El Mac no entrará en reposo por inactividad. Si cierras la tapa, sí entrará en reposo.";
+
+/* Menu: status */
+"Battery at %lld%% — sleep allowed" = "Batería al %lld %%: se permite el reposo";
+"Turns off in %@" = "Se desactiva en %@";
+"at %@" = "a las %@";
+"Cancel timer" = "Cancelar temporizador";
+"Enabled by %@" = "Activado por: %@";
+"Manual toggle" = "Interruptor manual";
+"Timer" = "Temporizador";
+"External trigger: %@" = "Activador externo: %@";
+"%lld external triggers" = "%lld activadores externos";
+"Too hot — turned off at %@" = "Demasiado caliente: desactivado a las %@";
+"Running hot · turns off in %@" = "Temperatura alta · se desactiva en %@";
+"Offline — agents released at %@" = "Sin conexión: agentes liberados a las %@";
+"Offline · releasing agents in %@" = "Sin conexión · se liberan los agentes en %@";
+"Lid-closed protection needs a one-time admin approval." = "Para seguir despierto con la tapa cerrada hace falta una única aprobación de administrador.";
+"Waiting…" = "Esperando…";
+"Set Up…" = "Configurar…";
+
+/* Menu: manual, timer */
+"Enable manually" = "Activar manualmente";
+"No Sleep is ON until you disable this toggle." = "No Sleep sigue ACTIVADO hasta que desactives este interruptor.";
+"Keep awake for %@" = "Mantener despierto durante %@";
+"Custom: 45m, 1h30m, 18:30…" = "Personalizado: 45m, 1h30m, 18:30…";
+"until %@" = "hasta %@";
+"Start" = "Iniciar";
+
+/* Menu: external triggers */
+"External triggers" = "Activadores externos";
+"Turned off in Settings: agents and scripts can't keep your Mac awake." = "Desactivado en Ajustes: los agentes y scripts no pueden mantener tu Mac despierto.";
+"Settings…" = "Ajustes…";
+"External triggers are turned off in Settings" = "Los activadores externos están desactivados en Ajustes";
+"Turns on by itself while an agent or script is working" = "Se activa solo mientras un agente o un script está trabajando";
+"Ignore the running tasks until they finish (the manual toggle is not affected)" = "Ignorar las tareas en curso hasta que terminen (no afecta al interruptor manual)";
+"Let the running tasks keep your Mac awake again" = "Dejar que las tareas en curso vuelvan a mantener tu Mac despierto";
+"Nothing running. Your Mac stays awake automatically while Claude Code, Codex or T3 Code threads are working." = "No hay nada en marcha. Tu Mac se mantiene despierto automáticamente mientras trabajan los hilos de Claude Code, Codex o T3 Code.";
+"Keep your Mac awake while Claude Code, Codex or T3 Code threads are working." = "Mantén tu Mac despierto mientras trabajan los hilos de Claude Code, Codex o T3 Code.";
+"Connect…" = "Conectar…";
+"Ignore until this task finishes" = "Ignorar hasta que termine esta tarea";
+"ignored" = "ignorado";
+"just started" = "acaba de empezar";
+"for %@" = "desde hace %@";
+"Command line" = "Línea de comandos";
+
+/* Menu: glow, Wi‑Fi fallback, failsafes */
+"Screen glow" = "Resplandor en pantalla";
+"Show a faint glow along the bottom of the screen while your Mac is kept awake" = "Muestra un leve resplandor en el borde inferior de la pantalla mientras tu Mac se mantiene despierto";
+"Wi‑Fi fallback" = "Wi‑Fi de respaldo";
+"Join a backup network (like your iPhone's hotspot) when the internet drops" = "Conectarse a una red de respaldo (como el punto de acceso de tu iPhone) cuando se cae internet";
+"Change in Settings" = "Cambiar en Ajustes";
+"Choose a backup network in Settings" = "Elige una red de respaldo en Ajustes";
+"If the internet drops, joins %@" = "Si se cae internet, se conecta a %@";
+"Joins %@ only while it's broadcasting. Grant Accessibility in Settings to wake a locked iPhone." = "Solo se conecta a %@ mientras esté emitiendo. Da permiso de Accesibilidad en Ajustes para despertar un iPhone bloqueado.";
+"Joining %@…" = "Conectando a %@…";
+"Joined %@ at %@" = "Conectado a %@ a las %@";
+"Couldn't reach %@. Trying again at %@" = "No se pudo conectar a %@. Se volverá a intentar a las %@";
+"Couldn't reach %@. Will try again when the network changes." = "No se pudo conectar a %@. Se volverá a intentar cuando cambie la red.";
+"Thermal failsafe" = "Protección térmica";
+"Offline failsafe" = "Protección sin conexión";
+"Enabled" = "Activada";
+"Disabled" = "Desactivada";
+
+/* Menu: actions */
+"Update to %@" = "Actualizar a la %@";
+"restarts No Sleep" = "reinicia No Sleep";
+"Go Dark" = "A oscuras";
+"Screen black · sound muted" = "Pantalla negra · sin sonido";
+"Quit No Sleep" = "Salir de No Sleep";
+
+/* Settings: general */
+"No Sleep Settings" = "Ajustes de No Sleep";
+"General" = "General";
+"Open at login" = "Abrir al iniciar sesión";
+"Open Login Items…" = "Abrir ítems de inicio de sesión…";
+"Keep the display on too" = "Mantener también la pantalla encendida";
+"Allow sleep when the battery is low" = "Permitir el reposo con la batería baja";
+"Protects a closed MacBook in your bag from draining completely." = "Evita que un MacBook cerrado en tu mochila se quede sin batería.";
+"Battery threshold" = "Umbral de batería";
+
+/* Settings: screen glow */
+"Glow at the bottom of the screen" = "Resplandor en la parte inferior de la pantalla";
+"A faint band of color along the bottom edge of every display while your Mac is being kept awake." = "Una leve franja de color en el borde inferior de cada pantalla mientras tu Mac se mantiene despierto.";
+"Color" = "Color";
+"Reset to Amber" = "Restablecer ámbar";
+"Opacity" = "Opacidad";
+"Glow preview" = "Vista previa del resplandor";
+
+/* Settings: Wi‑Fi fallback */
+"Join a backup network when the internet drops" = "Conectarse a una red de respaldo cuando se cae internet";
+"After 30 seconds without internet, No Sleep joins the network you pick here. Made for your iPhone's hotspot: it reaches it even with the iPhone locked in your pocket and your Mac's lid closed. It tries 3 times, then waits for the network to change." = "Tras 30 segundos sin internet, No Sleep se conecta a la red que elijas aquí. Pensado para el punto de acceso de tu iPhone: llega a él incluso con el iPhone bloqueado en el bolsillo y la tapa del Mac cerrada. Lo intenta 3 veces y después espera a que cambie la red.";
+"Backup network" = "Red de respaldo";
+"None" = "Ninguna";
+"Accessibility permission" = "Permiso de Accesibilidad";
+"Granted" = "Concedido";
+"Not granted" = "No concedido";
+"Grant…" = "Conceder…";
+"Testing…" = "Probando…";
+"Test now" = "Probar ahora";
+"Try it" = "Pruébalo";
+"Joins the backup network now, even if the internet is up, and stays on it." = "Se conecta ahora a la red de respaldo, aunque haya internet, y se queda en ella.";
+"Accessibility lets No Sleep pick your iPhone from the Wi‑Fi menu, which wakes its hotspot even while it's locked (Instant Hotspot). For that, use the same Apple Account on both, with Bluetooth and Wi‑Fi on. On the iPhone, under Personal Hotspot, turn on **Maximize Compatibility** (2.4 GHz connects more reliably) and **Allow Others to Join**. It only acts while your Mac is awake, so pair it with No Sleep to keep working with the lid closed." = "Con Accesibilidad, No Sleep puede elegir tu iPhone en el menú Wi‑Fi, lo que despierta su punto de acceso aunque esté bloqueado (Instant Hotspot). Para ello, usa la misma cuenta de Apple en los dos, con Bluetooth y Wi‑Fi activados. En el iPhone, en Punto de acceso personal, activa **Maximizar compatibilidad** (la banda de 2,4 GHz conecta de forma más fiable) y **Permitir que otros se conecten**. Solo actúa mientras tu Mac está despierto, así que combínalo con No Sleep para seguir trabajando con la tapa cerrada.";
+"Joining “%@”…" = "Conectando a “%@”…";
+"Works: joined “%@” and the internet is up." = "Funciona: conectado a “%@” y con internet.";
+"Joined “%@”, but it has no internet." = "Conectado a “%@”, pero no tiene internet.";
+"Couldn't join “%@”. Check the tips below." = "No se pudo conectar a “%@”. Revisa los consejos de abajo.";
+
+/* Settings: lid */
+"Stay awake with the lid closed" = "Seguir despierto con la tapa cerrada";
+"Uses `pmset -a disablesleep`, like `sudo pmset disablesleep 1`." = "Usa `pmset -a disablesleep`, como `sudo pmset disablesleep 1`.";
+"Admin permission" = "Permiso de administrador";
+"Revoke…" = "Revocar…";
+"Lid closed" = "Tapa cerrada";
+"Granting adds a rule in /etc/sudoers.d/nosleep that only allows `pmset -a disablesleep 0` and `1` without a password. You're asked once; quitting No Sleep always restores normal sleep." = "Al concederlo se añade una regla en /etc/sudoers.d/nosleep que solo permite `pmset -a disablesleep 0` y `1` sin contraseña. Se pide una sola vez; al salir de No Sleep siempre se restablece el reposo normal.";
+"Couldn't change the sleep setting (pmset failed)." = "No se pudo cambiar el ajuste de reposo (falló pmset).";
+"Setup was cancelled." = "Se canceló la configuración.";
+"Your user name contains characters No Sleep can't safely write to sudoers." = "Tu nombre de usuario contiene caracteres que No Sleep no puede escribir de forma segura en sudoers.";
+"No Sleep needs permission to keep your Mac awake when the lid is closed. You'll only be asked once." = "No Sleep necesita permiso para mantener tu Mac despierto con la tapa cerrada. Solo se te pedirá una vez.";
+"No Sleep wants to remove its permission to change sleep settings." = "No Sleep quiere retirar su permiso para cambiar los ajustes de reposo.";
+
+/* Settings: failsafes */
+"Turns No Sleep off if your Mac stays hot (serious or critical thermal state, as reported by macOS) for 20 minutes in a row while it's being kept awake. Agents can't turn it back on until it cools down." = "Desactiva No Sleep si tu Mac sigue caliente (estado térmico grave o crítico, según macOS) durante 20 minutos seguidos mientras se mantiene despierto. Los agentes no pueden volver a activarlo hasta que se enfríe.";
+"Temperature now" = "Temperatura actual";
+"Normal" = "Normal";
+"Warm" = "Templado";
+"Hot" = "Caliente";
+"Critical" = "Crítico";
+"If Claude Code, Codex or T3 Code agents are keeping your Mac awake but the internet is down, let it sleep. Your own toggle and timers aren't affected." = "Si los agentes de Claude Code, Codex o T3 Code mantienen tu Mac despierto pero no hay internet, deja que entre en reposo. Tu interruptor y tus temporizadores no se ven afectados.";
+"Internet down for" = "Sin internet durante";
+"%lld minutes" = "%lld minutos";
+"Internet now" = "Internet ahora";
+"Online" = "Con conexión";
+"Offline" = "Sin conexión";
+"Failsafes" = "Protecciones";
+"When a failsafe kicks in with the lid closed, your Mac goes to sleep right away." = "Si una protección salta con la tapa cerrada, tu Mac entra en reposo al momento.";
+
+/* Settings: agent integrations */
+"Agent integrations" = "Integración con agentes";
+"Allow external triggers" = "Permitir activadores externos";
+"Lets Claude Code, Codex, T3 Code and the `nosleep` CLI keep your Mac awake. The menu's switch only ignores the tasks running now." = "Permite que Claude Code, Codex, T3 Code y la CLI `nosleep` mantengan tu Mac despierto. El interruptor del menú solo ignora las tareas en curso.";
+"All connected" = "Todos conectados";
+"Disconnect All" = "Desconectar todos";
+"Connect All" = "Conectar todos";
+"Hook up your agents" = "Conecta tus agentes";
+"Connects Claude Code and Codex in one go, which covers T3 Code threads too. Same as `nosleep connect all`." = "Conecta Claude Code y Codex de una vez, lo que también cubre los hilos de T3 Code. Equivale a `nosleep connect all`.";
+"Codex asks you to review new hooks the next time it starts." = "Codex te pedirá revisar los hooks nuevos la próxima vez que se inicie.";
+"Covered" = "Cubierto";
+"Connect Claude Code or Codex" = "Conecta Claude Code o Codex";
+"T3 threads run Claude Code and Codex, so their hooks cover them." = "Los hilos de T3 usan Claude Code y Codex, así que sus hooks los cubren.";
+"15 minutes" = "15 minutos";
+"30 minutes" = "30 minutos";
+"1 hour" = "1 hora";
+"2 hours" = "2 horas";
+"4 hours" = "4 horas";
+"Give up on a silent agent after" = "Dejar de esperar a un agente que no responde tras";
+"Safety net in case an agent crashes without saying it stopped." = "Red de seguridad por si un agente se cuelga sin avisar de que ha terminado.";
+"While an agent is working, its hooks hold a lease that keeps your Mac awake. The lease is released when the turn ends, it's interrupted, or the agent's process exits." = "Mientras un agente trabaja, sus hooks mantienen una reserva que impide que tu Mac entre en reposo. La reserva se libera cuando acaba el turno, cuando se interrumpe o cuando se cierra el proceso del agente.";
+"Connected" = "Conectado";
+"Show %@ in Finder" = "Mostrar %@ en el Finder";
+"Disconnect" = "Desconectar";
+"Repair" = "Reparar";
+"Connect" = "Conectar";
+"Hooks in %@." = "Hooks en %@.";
+"Hooks point to an old copy of No Sleep." = "Los hooks apuntan a una copia antigua de No Sleep.";
+"Adds hooks to %@." = "Añade hooks a %@.";
+"Not found on this Mac — you can still connect it." = "No está en este Mac, pero puedes conectarlo igualmente.";
+
+/* Settings: command line */
+"Remove" = "Quitar";
+"Install in ~/.local/bin" = "Instalar en ~/.local/bin";
+"stay awake while a command runs" = "despierto mientras se ejecuta un comando";
+"stay awake for a while" = "despierto durante un rato";
+"until a process exits" = "hasta que termine un proceso";
+
+/* Settings: updates */
+"Updates" = "Actualizaciones";
+"Check for updates automatically" = "Buscar actualizaciones automáticamente";
+"Install updates automatically" = "Instalar actualizaciones automáticamente";
+"No Sleep restarts itself in a second and picks up where it left off." = "No Sleep se reinicia en un segundo y sigue donde lo dejó.";
+"Install Now" = "Instalar ahora";
+"Check Now" = "Comprobar ahora";
+"Last checked %@" = "Última comprobación: %@";
+"Updates come from GitHub Releases and are installed only if they're signed by the same developer as this copy." = "Las actualizaciones llegan desde GitHub Releases y solo se instalan si están firmadas por el mismo desarrollador que esta copia.";
+"Checking…" = "Comprobando…";
+"Downloading…" = "Descargando…";
+"Installing…" = "Instalando…";
+"Up to date" = "Actualizado";
+"%@ is available" = "La %@ está disponible";
+"%@ is out, no download for this Mac yet" = "Ya ha salido la %@, pero aún no hay descarga para este Mac";
+"Installed, but couldn't relaunch. Open No Sleep again." = "Instalada, pero no se pudo reiniciar. Vuelve a abrir No Sleep.";
+"GitHub answered %lld" = "GitHub respondió %lld";
+"The download is corrupted (checksum mismatch)." = "La descarga está dañada (la suma de comprobación no coincide).";
+"Couldn't open the downloaded disk image." = "No se pudo abrir la imagen de disco descargada.";
+"Couldn't copy the update." = "No se pudo copiar la actualización.";
+"The update doesn't contain the app." = "La actualización no contiene la app.";
+"The update is for a different app." = "La actualización es de otra app.";
+"No permission to update the app in %@." = "No hay permiso para actualizar la app en %@.";
+"Couldn't replace the app: %@" = "No se pudo reemplazar la app: %@";
+"Couldn't read this app's signature." = "No se pudo leer la firma de esta app.";
+"This copy of No Sleep isn't signed, so it can't verify updates." = "Esta copia de No Sleep no está firmada, así que no puede verificar las actualizaciones.";
+"This copy of No Sleep is ad-hoc signed, so it can't verify updates." = "Esta copia de No Sleep tiene una firma ad hoc, así que no puede verificar las actualizaciones.";
+"Couldn't read the update's signature." = "No se pudo leer la firma de la actualización.";
+"The update isn't signed by the No Sleep developer. Skipped it." = "La actualización no está firmada por el desarrollador de No Sleep. Se ha omitido.";
+
+/* Menu bar icon (VoiceOver) */
+"No Sleep: off" = "No Sleep: desactivado";
+"No Sleep: on" = "No Sleep: activado";
+"No Sleep is on" = "No Sleep está activado";
+"No Sleep is off" = "No Sleep está desactivado";

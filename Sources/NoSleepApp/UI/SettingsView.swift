@@ -62,7 +62,7 @@ struct SettingsView: View {
             }
             if controller.batteryGuardEnabled {
                 Picker("Battery threshold", selection: $controller.batteryGuardThreshold) {
-                    ForEach([5, 10, 15, 20, 30], id: \.self) { Text("\($0)%").tag($0) }
+                    ForEach([5, 10, 15, 20, 30], id: \.self) { Text(verbatim: "\($0)%").tag($0) }
                 }
             }
         } header: {
@@ -95,7 +95,7 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         Slider(value: $controller.glowOpacity, in: 0.05...1)
                             .frame(width: 180)
-                        Text("\(Int((controller.glowOpacity * 100).rounded()))%")
+                        Text(verbatim: "\(Int((controller.glowOpacity * 100).rounded()))%")
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                             .frame(width: 40, alignment: .trailing)
@@ -136,11 +136,11 @@ struct SettingsView: View {
                 }
             }
             LabeledContent {
-                Button(fallback.isTesting ? "Testing…" : "Test now") { fallback.testNow() }
+                Button(fallback.isTesting ? LocalizedStringKey("Testing…") : LocalizedStringKey("Test now")) { fallback.testNow() }
                     .disabled(fallback.ssid == nil || fallback.isTesting)
             } label: {
                 Text("Try it")
-                Text(fallback.testResult ?? "Joins the backup network now, even if the internet is up, and stays on it.")
+                Text(fallback.testResult ?? String(localized: "Joins the backup network now, even if the internet is up, and stays on it."))
             }
         } header: {
             Text("Wi‑Fi fallback")
@@ -167,7 +167,7 @@ struct SettingsView: View {
                         Button("Revoke…") { controller.removeLidHelper() }
                     } else {
                         Text("Not granted").foregroundStyle(.secondary)
-                        Button(controller.isSettingUpLidHelper ? "Waiting…" : "Grant…") {
+                        Button(controller.isSettingUpLidHelper ? LocalizedStringKey("Waiting…") : LocalizedStringKey("Grant…")) {
                             controller.setUpLidHelper()
                         }
                         .disabled(controller.isSettingUpLidHelper)
@@ -195,7 +195,7 @@ struct SettingsView: View {
                 Text("Turns No Sleep off if your Mac stays hot (serious or critical thermal state, as reported by macOS) for 20 minutes in a row while it's being kept awake. Agents can't turn it back on until it cools down.")
             }
             LabeledContent("Temperature now") {
-                Label(controller.thermalLevel.displayName,
+                Label(controller.thermalLevel.localizedName,
                       systemImage: controller.thermalLevel.isHot ? "thermometer.high" : "thermometer.medium")
                     .foregroundStyle(controller.thermalLevel.isHot ? Color.orange : Color.secondary)
             }
@@ -210,7 +210,7 @@ struct SettingsView: View {
                 }
             }
             LabeledContent("Internet now") {
-                Label(controller.connectivity.isOnline ? "Online" : "Offline",
+                Label(controller.connectivity.isOnline ? LocalizedStringKey("Online") : LocalizedStringKey("Offline"),
                       systemImage: controller.connectivity.isOnline ? "wifi" : "wifi.slash")
                     .foregroundStyle(controller.connectivity.isOnline ? Color.secondary : Color.orange)
             }
@@ -263,7 +263,7 @@ struct SettingsView: View {
                 configPath: "~/.codex/hooks.json",
                 status: integrations.codexStatus,
                 available: integrations.codexInstalledOnSystem,
-                note: "Codex asks you to review new hooks the next time it starts.",
+                note: String(localized: "Codex asks you to review new hooks the next time it starts."),
                 install: { integrations.install(.codex) },
                 uninstall: { integrations.uninstall(.codex) },
                 reveal: { integrations.reveal(.codex) }
@@ -329,7 +329,7 @@ struct SettingsView: View {
                     }
                 }
             } label: {
-                Text("No Sleep \(updater.currentVersion)")
+                Text(verbatim: "No Sleep \(updater.currentVersion)")
                 if let checked = updater.lastChecked {
                     Text("Last checked \(checked.formatted(.relative(presentation: .named)))")
                 }
@@ -350,7 +350,8 @@ struct SettingsView: View {
             EmptyView()
         case .checking, .downloading, .installing:
             ProgressView().controlSize(.small)
-            Text(updater.state == .checking ? "Checking…" : updater.state == .downloading ? "Downloading…" : "Installing…")
+            Text(updater.state == .checking ? LocalizedStringKey("Checking…")
+                  : updater.state == .downloading ? LocalizedStringKey("Downloading…") : LocalizedStringKey("Installing…"))
                 .foregroundStyle(.secondary)
         case .upToDate:
             Label("Up to date", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
@@ -367,15 +368,17 @@ struct SettingsView: View {
 
     private var cliSection: some View {
         Section {
-            LabeledContent("nosleep") {
+            LabeledContent {
                 if integrations.cliLinked {
                     HStack {
-                        Text("~/.local/bin/nosleep").foregroundStyle(.secondary)
+                        Text(verbatim: "~/.local/bin/nosleep").foregroundStyle(.secondary)
                         Button("Remove") { integrations.unlinkCLI() }
                     }
                 } else {
                     Button("Install in ~/.local/bin") { integrations.linkCLI() }
                 }
+            } label: {
+                Text(verbatim: "nosleep")
             }
             VStack(alignment: .leading, spacing: 4) {
                 ExampleCommand("nosleep run -- make release", "stay awake while a command runs")
@@ -437,10 +440,13 @@ private struct AgentRow: View {
 
     private var subtitle: String {
         switch status {
-        case .installed: return note.map { "Hooks in \(configPath). \($0)" } ?? "Hooks in \(configPath)."
-        case .outdated: return "Hooks point to an old copy of No Sleep."
+        case .installed:
+            let hooks = String(localized: "Hooks in \(configPath).")
+            return note.map { "\(hooks) \($0)" } ?? hooks
+        case .outdated: return String(localized: "Hooks point to an old copy of No Sleep.")
         case .notInstalled:
-            return available ? "Adds hooks to \(configPath)." : "Not found on this Mac — you can still connect it."
+            return available ? String(localized: "Adds hooks to \(configPath).")
+                             : String(localized: "Not found on this Mac — you can still connect it.")
         }
     }
 }
@@ -448,15 +454,15 @@ private struct AgentRow: View {
 @MainActor
 private struct ExampleCommand: View {
     let command: String
-    let explanation: String
-    init(_ command: String, _ explanation: String) {
+    let explanation: LocalizedStringKey
+    init(_ command: String, _ explanation: LocalizedStringKey) {
         self.command = command
         self.explanation = explanation
     }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(command)
+            Text(verbatim: command)
                 .font(.system(size: 11, design: .monospaced))
                 .textSelection(.enabled)
             Spacer()
@@ -476,7 +482,7 @@ final class SettingsWindowController {
         if window == nil {
             let hosting = NSHostingController(rootView: SettingsView(controller: controller, integrations: integrations, updater: updater))
             let window = NSWindow(contentViewController: hosting)
-            window.title = "No Sleep Settings"
+            window.title = String(localized: "No Sleep Settings")
             window.styleMask = [.titled, .closable, .miniaturizable]
             window.isReleasedWhenClosed = false
             window.setFrameAutosaveName("NoSleepSettings")
